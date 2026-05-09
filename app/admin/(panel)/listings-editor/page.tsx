@@ -157,7 +157,7 @@ function SortableImage({
 
 // ─── Rich Text Toolbar ────────────────────────────────────────────────────────
 
-function RichTextToolbar({ editor }: { editor: ReturnType<typeof useEditor> }) {
+function RichTextToolbar({ editor }: { editor: ReturnType<typeof useEditor> | null }) {
   if (!editor) return null;
 
   const Btn = ({ active, onClick, children, title }: { active?: boolean; onClick: () => void; children: React.ReactNode; title: string }) => (
