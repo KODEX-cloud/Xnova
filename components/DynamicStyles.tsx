@@ -1,0 +1,320 @@
+import { Fragment } from "react";
+import { prisma } from "@/lib/prisma";
+import { getContrastColor } from "@/lib/utils/contrast";
+import { DESIGN_KEYS } from "@/lib/design-keys";
+
+export default async function DynamicStyles() {
+  let settings: Record<string, string> = {};
+  try {
+    const rows = await prisma.siteSetting.findMany({
+      where: { key: { in: DESIGN_KEYS } },
+    });
+    rows.forEach((r) => {
+      settings[r.key.replace("design.", "")] = r.value || "";
+    });
+  } catch {
+    // DB not ready — use defaults
+  }
+
+  // ── Token resolution with smart fallbacks ────────────────────────────────
+
+  const primary   = settings.colorPrimary   || "#F97316";
+  const secondary = settings.colorSecondary || "#FB923C";
+  const accent    = settings.colorAccent    || "#FBBF24";
+  const text      = settings.colorText      || "#1F2937";
+  const bg        = settings.colorBg        || "#FFFFFF";
+  const heading   = settings.colorHeading   || "#111827";
+  const sectionAlt = settings.colorSectionAlt || "#F9FAFB";
+  const radius    = settings.borderRadius   || "12px";
+  const font      = settings.fontFamily     || "'Inter', sans-serif";
+  const shadowStr = settings.shadowStrength || "medium";
+
+  // Buttons — fall back to primary if not customised
+  const btn        = settings.colorButton     || primary;
+  const btnText    = settings.colorButtonText || getContrastColor(btn);
+  const btnHover   = settings.colorButtonHover || secondary;
+
+  // Cards
+  const card       = settings.colorCard       || bg;
+  const cardBorder = settings.colorCardBorder || "#E5E7EB";
+
+  // Navigation
+  const navBg   = settings.colorNavBg   || "#FFFFFF";
+  const navText = settings.colorNavText || "#1F2937";
+  const navHover = settings.colorNavHover || primary;
+
+  // Auto-contrast helpers (server-computed)
+  const onPrimary   = getContrastColor(primary);
+  const onSecondary = getContrastColor(secondary);
+  const onBg        = getContrastColor(bg);
+  const onCard      = getContrastColor(card);
+  const onNav       = getContrastColor(navBg);
+  const onBtn       = getContrastColor(btn);
+
+  const defaultTheme    = settings.defaultTheme    || "light";
+  const animationsEnabled = settings.animationsEnabled !== "false";
+
+  const shadowMap: Record<string, string> = {
+    none:   "none",
+    light:  "0 2px 8px rgba(0,0,0,0.06)",
+    medium: "0 4px 20px rgba(0,0,0,0.10)",
+    heavy:  "0 8px 40px rgba(0,0,0,0.18)",
+  };
+  const shadow = shadowMap[shadowStr] || shadowMap.medium;
+
+  const css = `
+:root {
+  /* ── Brand ──────────────────────────────── */
+  --nova-primary:      ${primary};
+  --nova-secondary:    ${secondary};
+  --nova-accent:       ${accent};
+
+  /* ── Text & Backgrounds ─────────────────── */
+  --nova-text:         ${text};
+  --nova-heading:      ${heading};
+  --nova-bg:           ${bg};
+  --nova-section-alt:  ${sectionAlt};
+
+  /* ── Buttons ────────────────────────────── */
+  --nova-btn:          ${btn};
+  --nova-btn-text:     ${btnText};
+  --nova-btn-hover:    ${btnHover};
+
+  /* ── Cards ──────────────────────────────── */
+  --nova-card:         ${card};
+  --nova-card-border:  ${cardBorder};
+  --nova-shadow:       ${shadow};
+
+  /* ── Navigation ─────────────────────────── */
+  --nova-nav-bg:       ${navBg};
+  --nova-nav-text:     ${navText};
+  --nova-nav-hover:    ${navHover};
+
+  /* ── Shape & Font ───────────────────────── */
+  --nova-radius:       ${radius};
+  --nova-font:         ${font};
+
+  /* ── Auto-contrast helpers ──────────────── */
+  --nova-on-primary:   ${onPrimary};
+  --nova-on-secondary: ${onSecondary};
+  --nova-on-bg:        ${onBg};
+  --nova-on-card:      ${onCard};
+  --nova-on-nav:       ${onNav};
+  --nova-on-btn:       ${onBtn};
+}
+
+/* ── CRITICAL: Body background & text ────────────────────────────────────── */
+body {
+  background-color: var(--nova-bg) !important;
+  color:            var(--nova-text) !important;
+  font-family:      var(--nova-font) !important;
+}
+
+/* Admin panel gets its own dark override — scoped to the admin wrapper */
+.admin-shell {
+  background-color: #080D14 !important;
+  color: #ffffff !important;
+}
+
+/* ── Headings ─────────────────────────────────────────────────────────────── */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--nova-heading) !important;
+}
+/* Admin headings stay white */
+.admin-shell h1, .admin-shell h2, .admin-shell h3,
+.admin-shell h4, .admin-shell h5, .admin-shell h6 {
+  color: inherit !important;
+}
+
+/* ── Primary (nova-red) overrides ─────────────────────────────────────────── */
+.bg-nova-red                   { background-color: var(--nova-primary)   !important; }
+.text-nova-red                 { color:            var(--nova-primary)   !important; }
+.border-nova-red               { border-color:     var(--nova-primary)   !important; }
+.from-nova-red                 { --tw-gradient-from: var(--nova-primary) !important; }
+.to-nova-red                   { --tw-gradient-to:   var(--nova-primary) !important; }
+.hover\\:bg-nova-red:hover     { background-color: var(--nova-primary)   !important; }
+.hover\\:text-nova-red:hover   { color:            var(--nova-primary)   !important; }
+.hover\\:border-nova-red:hover { border-color:     var(--nova-primary)   !important; }
+.shadow-nova-red\\/30          { --tw-shadow-color: color-mix(in srgb, var(--nova-primary) 30%, transparent) !important; }
+.ring-nova-red\\/50            { --tw-ring-color: color-mix(in srgb, var(--nova-primary) 50%, transparent) !important; }
+
+/* ── Secondary (nova-orange) overrides ───────────────────────────────────── */
+.bg-nova-orange                { background-color: var(--nova-secondary)  !important; }
+.text-nova-orange              { color:            var(--nova-secondary)  !important; }
+.border-nova-orange            { border-color:     var(--nova-secondary)  !important; }
+.from-nova-orange              { --tw-gradient-from: var(--nova-secondary) !important; }
+.to-nova-orange                { --tw-gradient-to:   var(--nova-secondary) !important; }
+.hover\\:text-nova-orange:hover { color:           var(--nova-secondary)  !important; }
+
+/* ── Accent ───────────────────────────────────────────────────────────────── */
+.text-nova-yellow              { color:            var(--nova-accent) !important; }
+.bg-nova-yellow                { background-color: var(--nova-accent) !important; }
+
+/* ── Gradient text ────────────────────────────────────────────────────────── */
+.gradient-text-nova {
+  background: linear-gradient(135deg, var(--nova-primary), var(--nova-secondary), var(--nova-accent)) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* ── Section label pill ───────────────────────────────────────────────────── */
+.section-label {
+  background-color: color-mix(in srgb, var(--nova-primary) 10%, transparent) !important;
+  color:            var(--nova-primary) !important;
+  border-color:     color-mix(in srgb, var(--nova-primary) 20%, transparent) !important;
+}
+
+/* ── Orange-tinted helpers (shift with primary color) ─────────────────────── */
+.bg-orange-50        { background-color: color-mix(in srgb, var(--nova-primary) 6%,  white) !important; }
+.bg-orange-100       { background-color: color-mix(in srgb, var(--nova-primary) 12%, white) !important; }
+.hover\\:bg-orange-50:hover  { background-color: color-mix(in srgb, var(--nova-primary) 6%,  white) !important; }
+.hover\\:bg-orange-100:hover { background-color: color-mix(in srgb, var(--nova-primary) 12%, white) !important; }
+.border-orange-200   { border-color: color-mix(in srgb, var(--nova-primary) 20%, white) !important; }
+.text-orange-600     { color: color-mix(in srgb, var(--nova-primary) 90%, black) !important; }
+.bg-nova-red\\/10   { background-color: color-mix(in srgb, var(--nova-primary) 10%, transparent) !important; }
+.bg-nova-red\\/15   { background-color: color-mix(in srgb, var(--nova-primary) 15%, transparent) !important; }
+
+/* ── Navigation dynamic colors ────────────────────────────────────────────── */
+.nova-nav {
+  background-color: var(--nova-nav-bg) !important;
+}
+.nova-nav a, .nova-nav button {
+  color: var(--nova-nav-text) !important;
+}
+.nova-nav a:hover, .nova-nav button:hover {
+  color: var(--nova-nav-hover) !important;
+}
+
+/* ── Button dynamic colors ────────────────────────────────────────────────── */
+.nova-btn {
+  background-color: var(--nova-btn) !important;
+  color:            var(--nova-btn-text) !important;
+  border-radius:    var(--nova-radius) !important;
+}
+.nova-btn:hover {
+  background-color: var(--nova-btn-hover) !important;
+}
+
+/* ── Card dynamic colors ──────────────────────────────────────────────────── */
+.nova-card, .cms-card {
+  background-color: var(--nova-card) !important;
+  border-color:     var(--nova-card-border) !important;
+  border-radius:    var(--nova-radius) !important;
+  box-shadow:       var(--nova-shadow) !important;
+}
+
+/* ── Section alternate background ─────────────────────────────────────────── */
+.bg-gray-50    { background-color: var(--nova-section-alt) !important; }
+.bg-gray-100   { background-color: color-mix(in srgb, var(--nova-section-alt) 80%, #e5e7eb) !important; }
+
+/* ── Auto-contrast safety rules ───────────────────────────────────────────── */
+[style*="background-color: #fff"],
+[style*="background-color: #ffffff"],
+[style*="background-color: white"],
+[style*="background: white"],
+[style*="background: #fff"] {
+  color: var(--nova-text);
+}
+
+/* ── DARK MODE ─────────────────────────────────────────────────────────────── */
+html.dark {
+  --nova-bg:           #0D1117;
+  --nova-text:         #F3F4F6;
+  --nova-heading:      #FFFFFF;
+  --nova-section-alt:  #111827;
+  --nova-card:         #1F2937;
+  --nova-card-border:  rgba(255,255,255,0.08);
+  --nova-nav-bg:       #0D1117;
+  --nova-nav-text:     #F3F4F6;
+  --nova-nav-hover:    var(--nova-primary);
+  --nova-shadow:       0 4px 24px rgba(0,0,0,0.4);
+}
+
+html.dark body {
+  background-color: #0D1117 !important;
+  color: #F3F4F6 !important;
+}
+
+html.dark h1, html.dark h2, html.dark h3,
+html.dark h4, html.dark h5, html.dark h6 {
+  color: #FFFFFF !important;
+}
+
+html.dark .bg-white {
+  background-color: #1F2937 !important;
+}
+
+html.dark .bg-gray-50 {
+  background-color: #111827 !important;
+}
+
+html.dark .bg-gray-100 {
+  background-color: #1F2937 !important;
+}
+
+html.dark .text-gray-900 { color: #F9FAFB !important; }
+html.dark .text-gray-800 { color: #F3F4F6 !important; }
+html.dark .text-gray-700 { color: #E5E7EB !important; }
+html.dark .text-gray-600 { color: #D1D5DB !important; }
+html.dark .text-gray-500 { color: #9CA3AF !important; }
+html.dark .text-gray-400 { color: #6B7280 !important; }
+
+html.dark .border-gray-100 { border-color: rgba(255,255,255,0.06) !important; }
+html.dark .border-gray-200 { border-color: rgba(255,255,255,0.10) !important; }
+
+html.dark .shadow-sm  { box-shadow: 0 1px 4px rgba(0,0,0,0.3)  !important; }
+html.dark .shadow-md  { box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important; }
+html.dark .shadow-lg  { box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important; }
+html.dark .shadow-xl  { box-shadow: 0 16px 48px rgba(0,0,0,0.5) !important; }
+html.dark .shadow-2xl { box-shadow: 0 24px 64px rgba(0,0,0,0.6) !important; }
+
+/* Navbar dark */
+html.dark header.fixed {
+  background-color: rgba(13,17,23,0.95) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* Cards dark */
+html.dark .nova-card, html.dark .cms-card {
+  background-color: #1F2937 !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+/* Mobile panel dark */
+html.dark .bg-white.border-l {
+  background-color: #111827 !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
+
+/* Admin shell keeps its own dark — always dark, no override */
+html.dark .admin-shell {
+  background-color: #080D14 !important;
+  color: #ffffff !important;
+}
+
+/* ── ANIMATIONS KILL SWITCH ────────────────────────────────────────────────── */
+body.no-animations *,
+body.no-animations *::before,
+body.no-animations *::after {
+  animation-duration: 0.001ms !important;
+  animation-delay: 0ms !important;
+  transition-duration: 0.001ms !important;
+  transition-delay: 0ms !important;
+}
+`.trim();
+
+  // Script: apply default theme if user has no preference stored yet
+  const themeScript = `(function(){if(!localStorage.getItem('nova-theme')){var d=${JSON.stringify(defaultTheme)};if(d==='dark'||d==='system'){var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var apply=d==='dark'||prefersDark;document.documentElement.classList.toggle('dark',apply);document.documentElement.classList.toggle('light',!apply);}}})();`;
+
+  // Script: disable animations if turned off in admin
+  const animScript = animationsEnabled ? "" : `document.body.classList.add('no-animations');`;
+
+  return (
+    <Fragment>
+      <style dangerouslySetInnerHTML={{ __html: css }} />
+      <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      {!animationsEnabled && <script dangerouslySetInnerHTML={{ __html: animScript }} />}
+    </Fragment>
+  );
+}
