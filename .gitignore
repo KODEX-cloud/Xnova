@@ -16,7 +16,9 @@ out/
 
 # Database files
 prisma/*.db
+prisma/**/*.db
 prisma/*.db-journal
+prisma/**/*.db-journal
 
 # Uploads (user-generated content)
 public/uploads/
