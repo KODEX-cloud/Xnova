@@ -31,6 +31,15 @@ interface DesignSettings {
   colorNavBg: string;
   colorNavText: string;
   colorNavHover: string;
+  // Footer
+  colorFooterBg: string;
+  colorFooterText: string;
+  colorFooterHeading: string;
+  colorFooterHover: string;
+  // Hero, overlays & spacing
+  heroStyle: string;
+  overlayOpacity: string;
+  spacingMain: string;
   // Shape & font
   borderRadius: string;
   fontFamily: string;
@@ -56,6 +65,13 @@ const DEFAULTS: DesignSettings = {
   colorNavBg:      "#FFFFFF",
   colorNavText:    "#1F2937",
   colorNavHover:   "#F97316",
+  colorFooterBg:   "#F9FAFB",
+  colorFooterText: "#6B7280",
+  colorFooterHeading: "#1F2937",
+  colorFooterHover: "#F97316",
+  heroStyle:       "gradient",
+  overlayOpacity:  "30",
+  spacingMain:     "80px",
   borderRadius:    "12px",
   fontFamily:      "'Inter', sans-serif",
   shadowStrength:  "medium",
@@ -196,6 +212,7 @@ export default function DesignPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
+  const [activeGroup, setActiveGroup] = useState<"global" | "header" | "footer" | "page" | "section" | "bouton" | "carte">("global");
   const liveStyleRef = useRef<HTMLStyleElement | null>(null);
 
   // ── Load from API ───────────────────────────────────────────────────────────
@@ -240,6 +257,13 @@ export default function DesignPage() {
         --nova-nav-bg:       ${s.colorNavBg};
         --nova-nav-text:     ${s.colorNavText};
         --nova-nav-hover:    ${s.colorNavHover};
+        --nova-footer-bg:      ${s.colorFooterBg};
+        --nova-footer-text:    ${s.colorFooterText};
+        --nova-footer-heading: ${s.colorFooterHeading};
+        --nova-footer-hover:   ${s.colorFooterHover};
+        --nova-hero-style:     ${s.heroStyle};
+        --nova-overlay-opacity: ${Number(s.overlayOpacity) / 100};
+        --nova-spacing-main:   ${s.spacingMain};
         --nova-radius:       ${s.borderRadius};
         --nova-font:         ${s.fontFamily};
       }
@@ -308,6 +332,17 @@ export default function DesignPage() {
       colorNavText: getContrastColor(v),
     }));
   };
+
+  // Auto-fill footer text when footer bg changes
+  const handleFooterBgChange = (v: string) => {
+    setSettings((s) => ({
+      ...s,
+      colorFooterBg: v,
+      colorFooterText: getContrastColor(v),
+      colorFooterHeading: getContrastColor(v) === "#FFFFFF" ? "#FFFFFF" : "#1F2937",
+    }));
+  };
+
 
   if (loading) {
     return (
@@ -387,314 +422,444 @@ export default function DesignPage() {
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* ── Left / center: settings ──────────────────────────────────────── */}
         <div className="xl:col-span-2 space-y-5">
-
-          {/* 1. Preset palettes */}
-          <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
-            <SectionTitle icon={Palette} title="Palettes prédéfinies" />
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              {PRESETS.map((preset) => (
+          {/* ── Group Tabs Navigation ────────────────────────────────────────── */}
+          <div className="flex bg-[#111827] border border-white/5 rounded-2xl p-1 gap-1 flex-wrap mb-4 shadow-sm">
+            {[
+              { id: "global",  label: "Global",  Icon: Palette },
+              { id: "header",  label: "Header",  Icon: Navigation },
+              { id: "footer",  label: "Footer",  Icon: Grid3x3 },
+              { id: "page",    label: "Page",    Icon: Sun },
+              { id: "section", label: "Section", Icon: Sliders },
+              { id: "bouton",  label: "Bouton",  Icon: MousePointer },
+              { id: "carte",   label: "Carte",   Icon: Grid3x3 },
+            ].map((t) => {
+              const TabIcon = t.Icon;
+              return (
                 <button
-                  key={preset.name}
-                  onClick={() => applyPreset(preset)}
-                  className="flex items-center gap-2.5 p-3 rounded-xl border border-white/5 hover:border-white/15 bg-white/[0.02] hover:bg-white/[0.05] transition-all text-left group"
+                  key={t.id}
+                  onClick={() => setActiveGroup(t.id as any)}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all duration-200 ${
+                    activeGroup === t.id
+                      ? "bg-nova-red text-white shadow-md shadow-orange-500/20"
+                      : "text-white/40 hover:text-white hover:bg-white/5"
+                  }`}
                 >
-                  <div className="flex gap-1 flex-shrink-0">
-                    <div className="w-4 h-4 rounded-full ring-1 ring-white/10" style={{ backgroundColor: preset.primary }} />
-                    <div className="w-4 h-4 rounded-full ring-1 ring-white/10" style={{ backgroundColor: preset.secondary }} />
-                    <div className="w-4 h-4 rounded-full ring-1 ring-white/10" style={{ backgroundColor: preset.accent }} />
-                  </div>
-                  <span className="text-white/50 text-xs group-hover:text-white/80 transition-colors leading-tight">{preset.name}</span>
+                  <TabIcon size={14} />
+                  {t.label}
                 </button>
-              ))}
-            </div>
+              );
+            })}
           </div>
 
-          {/* 2. Brand colors */}
-          <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
-            <SectionTitle icon={Palette} title="🎨 Couleurs de marque" />
-            <ColorField label="Couleur principale" description="Boutons CTA, liens actifs, icônes" value={settings.colorPrimary} onChange={set("colorPrimary")} showContrast />
-            <ColorField label="Couleur secondaire" description="Dégradés, states hover" value={settings.colorSecondary} onChange={set("colorSecondary")} showContrast />
-            <ColorField label="Couleur d'accentuation" description="Étoiles, badges, highlights" value={settings.colorAccent} onChange={set("colorAccent")} showContrast />
-          </div>
-
-          {/* 3. Text & backgrounds */}
-          <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
-            <SectionTitle icon={Sun} title="🌐 Fond & Textes globaux" />
-            <ColorField label="Fond général du site" description="Background de toutes les pages" value={settings.colorBg} onChange={set("colorBg")} showContrast />
-            <ColorField label="Fond alterné (sections grises)" description="bg-gray-50 — sections alternées" value={settings.colorSectionAlt} onChange={set("colorSectionAlt")} showContrast />
-            <ColorField label="Couleur du texte principal" description="Corps de texte, paragraphes" value={settings.colorText} onChange={set("colorText")} />
-            <ColorField label="Couleur des titres (H1-H6)" description="Tous les titres du site" value={settings.colorHeading} onChange={set("colorHeading")} />
-          </div>
-
-          {/* 4. Buttons */}
-          <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
-            <SectionTitle icon={MousePointer} title="🔘 Boutons" />
-            <div className="mb-3 p-3 bg-white/[0.03] rounded-lg">
-              <p className="text-white/30 text-xs mb-2">Aperçu bouton :</p>
-              <div className="flex gap-2">
-                <span
-                  className="px-4 py-2 text-sm font-bold"
-                  style={{
-                    backgroundColor: previewBtn,
-                    color: previewBtnText,
-                    borderRadius: settings.borderRadius,
-                  }}
-                >
-                  Explorer →
-                </span>
-                <span
-                  className="px-4 py-2 text-sm font-bold border-2"
-                  style={{
-                    borderColor: `${previewBtn}60`,
-                    color: previewBtn,
-                    borderRadius: settings.borderRadius,
-                    backgroundColor: "transparent",
-                  }}
-                >
-                  En savoir plus
-                </span>
+          {/* ── GLOBAL TAB ─────────────────────────────────────────────────── */}
+          {activeGroup === "global" && (
+            <div className="space-y-5">
+              {/* Preset palettes */}
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Palette} title="Palettes prédéfinies" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {PRESETS.map((preset) => (
+                    <button
+                      key={preset.name}
+                      onClick={() => applyPreset(preset)}
+                      className="flex items-center gap-2.5 p-3 rounded-xl border border-white/5 hover:border-white/15 bg-white/[0.02] hover:bg-white/[0.05] transition-all text-left group"
+                    >
+                      <div className="flex gap-1 flex-shrink-0">
+                        <div className="w-4 h-4 rounded-full ring-1 ring-white/10" style={{ backgroundColor: preset.primary }} />
+                        <div className="w-4 h-4 rounded-full ring-1 ring-white/10" style={{ backgroundColor: preset.secondary }} />
+                        <div className="w-4 h-4 rounded-full ring-1 ring-white/10" style={{ backgroundColor: preset.accent }} />
+                      </div>
+                      <span className="text-white/50 text-xs group-hover:text-white/80 transition-colors leading-tight">{preset.name}</span>
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-            <ColorField
-              label="Fond du bouton principal"
-              description="Couleur de fond des boutons CTA"
-              value={settings.colorButton}
-              onChange={handleButtonBgChange}
-              showContrast
-            />
-            <ColorField
-              label="Texte du bouton"
-              description="Calculé automatiquement — peut être surchargé"
-              value={settings.colorButtonText}
-              onChange={set("colorButtonText")}
-            />
-            <ColorField
-              label="Couleur au survol (hover)"
-              description="Background quand la souris est sur le bouton"
-              value={settings.colorButtonHover}
-              onChange={set("colorButtonHover")}
-              showContrast
-            />
-          </div>
 
-          {/* 5. Cards & borders */}
-          <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
-            <SectionTitle icon={Grid3x3} title="📦 Cartes & Cadres" />
-            <div className="mb-3 p-3 bg-white/[0.03] rounded-lg">
-              <div
-                className="p-4 max-w-[180px]"
-                style={{
-                  backgroundColor: settings.colorCard,
-                  border: `1px solid ${settings.colorCardBorder}`,
-                  borderRadius: settings.borderRadius,
-                  boxShadow: {
-                    none: "none", light: "0 2px 8px rgba(0,0,0,0.06)",
-                    medium: "0 4px 20px rgba(0,0,0,0.10)", heavy: "0 8px 40px rgba(0,0,0,0.18)",
-                  }[settings.shadowStrength] || "0 4px 20px rgba(0,0,0,0.10)",
-                }}
-              >
-                <p className="text-xs font-bold mb-1" style={{ color: settings.colorHeading }}>Carte exemple</p>
-                <p className="text-[10px]" style={{ color: settings.colorText }}>Contenu de la carte</p>
-                <p className="text-[10px] font-black mt-1" style={{ color: settings.colorPrimary }}>15 000 000 FCFA</p>
+              {/* Brand colors */}
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Palette} title="Couleurs de marque" />
+                <ColorField label="Couleur principale" description="Boutons CTA, liens actifs, icônes" value={settings.colorPrimary} onChange={set("colorPrimary")} showContrast />
+                <ColorField label="Couleur secondaire" description="Dégradés, states hover" value={settings.colorSecondary} onChange={set("colorSecondary")} showContrast />
+                <ColorField label="Couleur d'accentuation" description="Étoiles, badges, highlights" value={settings.colorAccent} onChange={set("colorAccent")} showContrast />
               </div>
-            </div>
-            <ColorField label="Fond des cartes" value={settings.colorCard} onChange={set("colorCard")} showContrast />
-            <ColorField label="Bordure des cartes" value={settings.colorCardBorder} onChange={set("colorCardBorder")} />
-            {/* Shadow */}
-            <div className="pt-3">
-              <p className="text-white text-sm font-medium mb-2">Intensité de l'ombre</p>
-              <div className="grid grid-cols-4 gap-2">
-                {SHADOW_OPTIONS.map((o) => (
+
+              {/* Typography */}
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Type} title="Typographie" />
+                <div className="mb-4">
+                  <label className="text-white/50 text-xs font-medium block mb-2">Police de caractères</label>
+                  <select
+                    value={settings.fontFamily}
+                    onChange={(e) => set("fontFamily")(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-nova-red/40"
+                  >
+                    {FONT_OPTIONS.map((f) => (
+                      <option key={f.value} value={f.value} className="bg-[#111827]">{f.label}</option>
+                    ))}
+                  </select>
+                  <div className="mt-2 p-3 bg-white/[0.02] rounded-lg">
+                    <p className="text-white/20 text-xs mb-1">Prévisualisation :</p>
+                    <p style={{ fontFamily: settings.fontFamily }} className="text-white/80 text-sm font-medium">
+                      NOVA Automobile & Immobilier CI
+                    </p>
+                    <p style={{ fontFamily: settings.fontFamily }} className="text-white/40 text-xs mt-0.5">
+                      Votre partenaire premium en Côte d'Ivoire
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Border radius */}
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Sliders} title="Arrondi des éléments" />
+                <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
+                  {RADIUS_OPTIONS.map((r) => (
+                    <button
+                      key={r.value}
+                      onClick={() => set("borderRadius")(r.value)}
+                      className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
+                        settings.borderRadius === r.value
+                          ? "border-nova-red/50 bg-nova-red/10 text-nova-red"
+                          : "border-white/5 bg-white/[0.02] text-white/40 hover:border-white/15 hover:text-white/70"
+                      }`}
+                    >
+                      <div
+                        className="w-8 h-8 border-2 border-current"
+                        style={{ borderRadius: r.value === "9999px" ? "9999px" : r.value }}
+                      />
+                      <span className="text-[10px] text-center leading-tight">{r.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Dark Mode */}
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Moon} title="Mode Sombre" />
+                <p className="text-white/30 text-xs mb-4">
+                  Définit le thème par défaut pour les visiteurs. Chaque utilisateur peut ensuite choisir sa préférence via le bouton dans la navbar.
+                </p>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { value: "light",  label: "Clair",   Icon: Sun,     desc: "Fond blanc" },
+                    { value: "dark",   label: "Sombre",  Icon: Moon,    desc: "Fond noir" },
+                    { value: "system", label: "Système", Icon: Monitor, desc: "Selon l'OS" },
+                  ].map(({ value, label, Icon, desc }) => (
+                    <button
+                      key={value}
+                      onClick={() => set("defaultTheme")(value)}
+                      className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
+                        settings.defaultTheme === value
+                          ? "border-nova-red/50 bg-nova-red/10 text-nova-red"
+                          : "border-white/5 bg-white/[0.02] text-white/40 hover:border-white/15 hover:text-white/70"
+                      }`}
+                    >
+                      <Icon size={20} />
+                      <span className="text-xs font-semibold">{label}</span>
+                      <span className="text-[10px] opacity-60">{desc}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Animations */}
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Zap} title="Animations & Transitions" />
+                <p className="text-white/30 text-xs mb-4">
+                  Contrôlez les animations Framer Motion et CSS sur l'ensemble du site. La désactivation améliore les performances et l'accessibilité.
+                </p>
+                <div className="flex items-center justify-between p-4 bg-white/[0.03] rounded-xl border border-white/5">
+                  <div>
+                    <p className="text-white text-sm font-medium">Animations activées</p>
+                    <p className="text-white/30 text-xs mt-0.5">
+                      {settings.animationsEnabled !== "false"
+                        ? "Les transitions et animations Framer Motion sont actives"
+                        : "Toutes les animations sont désactivées — transitions instantanées"}
+                    </p>
+                  </div>
                   <button
-                    key={o.value}
-                    onClick={() => set("shadowStrength")(o.value)}
-                    className={`py-2 px-3 text-xs rounded-lg border transition-all ${
-                      settings.shadowStrength === o.value
-                        ? "border-nova-red/50 bg-nova-red/10 text-nova-red"
-                        : "border-white/5 bg-white/[0.02] text-white/40 hover:border-white/15"
+                    onClick={() => set("animationsEnabled")(settings.animationsEnabled === "false" ? "true" : "false")}
+                    className={`relative w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
+                      settings.animationsEnabled !== "false" ? "bg-nova-red" : "bg-white/10"
                     }`}
                   >
-                    {o.label}
+                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
+                      settings.animationsEnabled !== "false" ? "translate-x-6" : "translate-x-0.5"
+                    }`} />
                   </button>
-                ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* 6. Navigation */}
-          <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
-            <SectionTitle icon={Navigation} title="📑 Menu & Navigation" />
-            <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: settings.colorNavBg, border: "1px solid rgba(0,0,0,0.08)" }}>
-              <div className="flex items-center justify-between">
-                <span className="font-black text-sm" style={{ color: settings.colorPrimary }}>NOVA</span>
-                <div className="flex items-center gap-3">
-                  {["Accueil", "Auto", "Immo"].map((item, i) => (
-                    <span
-                      key={item}
-                      className="text-xs font-medium"
-                      style={{ color: i === 0 ? settings.colorNavHover : settings.colorNavText }}
-                    >
-                      {item}
-                    </span>
-                  ))}
-                  <span
-                    className="text-xs font-bold px-3 py-1"
-                    style={{ backgroundColor: previewBtn, color: previewBtnText, borderRadius: settings.borderRadius }}
+          {/* ── HEADER TAB ─────────────────────────────────────────────────── */}
+          {activeGroup === "header" && (
+            <div className="space-y-5">
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Navigation} title="Menu & Navigation" />
+                <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: settings.colorNavBg, border: "1px solid rgba(0,0,0,0.08)" }}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-sm" style={{ color: settings.colorPrimary }}>NOVA</span>
+                    <div className="flex items-center gap-3">
+                      {["Accueil", "Auto", "Immo"].map((item, i) => (
+                        <span
+                          key={item}
+                          className="text-xs font-medium"
+                          style={{ color: i === 0 ? settings.colorNavHover : settings.colorNavText }}
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <ColorField
+                  label="Fond du menu"
+                  description="Background de la barre de navigation"
+                  value={settings.colorNavBg}
+                  onChange={handleNavBgChange}
+                  showContrast
+                />
+                <ColorField
+                  label="Texte du menu"
+                  description="Liens de navigation"
+                  value={settings.colorNavText}
+                  onChange={set("colorNavText")}
+                />
+                <ColorField
+                  label="Couleur au survol / actif"
+                  description="Lien actif ou au hover dans le menu"
+                  value={settings.colorNavHover}
+                  onChange={set("colorNavHover")}
+                  showContrast
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── FOOTER TAB ─────────────────────────────────────────────────── */}
+          {activeGroup === "footer" && (
+            <div className="space-y-5">
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Grid3x3} title="Pied de page (Footer)" />
+                <div className="mb-3 p-3 rounded-lg" style={{ backgroundColor: settings.colorFooterBg, border: "1px solid rgba(0,0,0,0.08)" }}>
+                  <div>
+                    <span className="font-bold text-xs" style={{ color: settings.colorFooterHeading }}>© {new Date().getFullYear()} NOVA Marketplace</span>
+                    <p className="text-[10px] mt-1" style={{ color: settings.colorFooterText }}>Votre partenaire automobile et immobilier.</p>
+                    <span className="text-[10px] underline font-bold block mt-2" style={{ color: settings.colorFooterHover }}>Mentions légales</span>
+                  </div>
+                </div>
+                <ColorField
+                  label="Fond du footer"
+                  description="Couleur de fond globale du footer"
+                  value={settings.colorFooterBg}
+                  onChange={handleFooterBgChange}
+                  showContrast
+                />
+                <ColorField
+                  label="Texte du footer"
+                  description="Description et liens secondaires"
+                  value={settings.colorFooterText}
+                  onChange={set("colorFooterText")}
+                />
+                <ColorField
+                  label="Titres du footer"
+                  description="En-têtes des colonnes de liens"
+                  value={settings.colorFooterHeading}
+                  onChange={set("colorFooterHeading")}
+                />
+                <ColorField
+                  label="Lien survol (hover) / actif"
+                  description="Couleur quand un lien est survolé"
+                  value={settings.colorFooterHover}
+                  onChange={set("colorFooterHover")}
+                  showContrast
+                />
+              </div>
+            </div>
+          )}
+
+          {/* ── PAGE TAB ───────────────────────────────────────────────────── */}
+          {activeGroup === "page" && (
+            <div className="space-y-5">
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Sun} title="Fond & Textes généraux de page" />
+                <ColorField label="Fond général de page" description="Arrière-plan principal de toutes les pages" value={settings.colorBg} onChange={set("colorBg")} showContrast />
+                <ColorField label="Texte principal" description="Corps de texte et paragraphes" value={settings.colorText} onChange={set("colorText")} />
+                <ColorField label="Titres principaux (H1-H6)" description="Titres de pages et de sections" value={settings.colorHeading} onChange={set("colorHeading")} />
+              </div>
+            </div>
+          )}
+
+          {/* ── SECTION TAB ────────────────────────────────────────────────── */}
+          {activeGroup === "section" && (
+            <div className="space-y-5">
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Sliders} title="Sections & Style du Hero" />
+                <ColorField label="Fond alterné (sections grises)" description="bg-gray-50 — utilisé pour alterner l'arrière-plan" value={settings.colorSectionAlt} onChange={set("colorSectionAlt")} showContrast />
+
+                {/* Hero section style selection */}
+                <div className="py-4 border-b border-white/5">
+                  <p className="text-white text-sm font-medium mb-1">Style de la section Hero</p>
+                  <p className="text-white/30 text-xs mb-3">Choisissez le rendu visuel de la bannière principale d'accueil</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {[
+                      { value: "shader", label: "Shader WebGL", desc: "Effets animés fluides" },
+                      { value: "flat", label: "Couleur unie", desc: "Minimaliste et léger" },
+                      { value: "gradient", label: "Dégradé", desc: "Moderne et dynamique" },
+                    ].map((opt) => (
+                      <button
+                        key={opt.value}
+                        onClick={() => set("heroStyle")(opt.value)}
+                        className={`p-3 rounded-lg border transition-all text-left flex flex-col gap-1 ${
+                          settings.heroStyle === opt.value
+                            ? "border-nova-red/50 bg-nova-red/10 text-nova-red"
+                            : "border-white/5 bg-white/[0.02] text-white/40 hover:border-white/15 hover:text-white/70"
+                        }`}
+                      >
+                        <span className="text-xs font-bold">{opt.label}</span>
+                        <span className="text-[9px] opacity-60 leading-none">{opt.desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Overlay intensity range slider */}
+                <div className="py-4 border-b border-white/5">
+                  <div className="flex items-center justify-between mb-1">
+                    <p className="text-white text-sm font-medium">Intensité de l'overlay (Hero)</p>
+                    <span className="text-xs text-nova-red font-mono font-bold">{settings.overlayOpacity}%</span>
+                  </div>
+                  <p className="text-white/30 text-xs mb-3">Obscurcit le fond du Hero pour maximiser le contraste et la lisibilité du texte</p>
+                  <div className="flex items-center gap-3">
+                    <span className="text-white/20 text-xs">Clair</span>
+                    <input
+                      type="range"
+                      min="0"
+                      max="95"
+                      step="5"
+                      value={settings.overlayOpacity}
+                      onChange={(e) => set("overlayOpacity")(e.target.value)}
+                      className="flex-1 accent-nova-red h-1.5 bg-white/10 rounded-lg cursor-pointer"
+                    />
+                    <span className="text-white/20 text-xs">Foncé</span>
+                  </div>
+                </div>
+
+                {/* Main vertical rhythm spacing selection */}
+                <div className="pt-4">
+                  <p className="text-white text-sm font-medium mb-1">Espacements principaux (Rythme vertical)</p>
+                  <p className="text-white/30 text-xs mb-3">Ajuste le padding interne et l'espacement entre toutes les sections du site</p>
+                  <select
+                    value={settings.spacingMain}
+                    onChange={(e) => set("spacingMain")(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-nova-red/40"
                   >
-                    Contact
-                  </span>
+                    {[
+                      { label: "Compact (40px)", value: "40px" },
+                      { label: "Normal (60px)", value: "60px" },
+                      { label: "Aéré (80px - Défaut)", value: "80px" },
+                      { label: "Spacieux (100px)", value: "100px" },
+                      { label: "Ultra (120px)", value: "120px" },
+                    ].map((sp) => (
+                      <option key={sp.value} value={sp.value} className="bg-[#111827]">{sp.label}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
             </div>
-            <ColorField
-              label="Fond du menu"
-              description="Background de la barre de navigation"
-              value={settings.colorNavBg}
-              onChange={handleNavBgChange}
-              showContrast
-            />
-            <ColorField
-              label="Texte du menu"
-              description="Liens de navigation"
-              value={settings.colorNavText}
-              onChange={set("colorNavText")}
-            />
-            <ColorField
-              label="Couleur au survol / actif"
-              description="Lien actif ou au hover dans le menu"
-              value={settings.colorNavHover}
-              onChange={set("colorNavHover")}
-              showContrast
-            />
-          </div>
+          )}
 
-          {/* 7. Typography */}
-          <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
-            <SectionTitle icon={Type} title="✍️ Typographie" />
-            <div className="mb-4">
-              <label className="text-white/50 text-xs font-medium block mb-2">Police de caractères</label>
-              <select
-                value={settings.fontFamily}
-                onChange={(e) => set("fontFamily")(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2.5 text-white text-sm focus:outline-none focus:border-nova-red/40"
-              >
-                {FONT_OPTIONS.map((f) => (
-                  <option key={f.value} value={f.value} className="bg-[#111827]">{f.label}</option>
-                ))}
-              </select>
-              <div className="mt-2 p-3 bg-white/[0.02] rounded-lg">
-                <p className="text-white/20 text-xs mb-1">Prévisualisation :</p>
-                <p style={{ fontFamily: settings.fontFamily }} className="text-white/80 text-sm font-medium">
-                  NOVA Automobile & Immobilier CI
-                </p>
-                <p style={{ fontFamily: settings.fontFamily }} className="text-white/40 text-xs mt-0.5">
-                  Votre partenaire premium en Côte d'Ivoire
-                </p>
+          {/* ── BOUTON TAB ─────────────────────────────────────────────────── */}
+          {activeGroup === "bouton" && (
+            <div className="space-y-5">
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={MousePointer} title="Boutons" />
+                <div className="mb-3 p-3 bg-white/[0.03] rounded-lg">
+                  <p className="text-white/30 text-xs mb-2">Aperçu bouton :</p>
+                  <div className="flex gap-2">
+                    <span
+                      className="px-4 py-2 text-sm font-bold"
+                      style={{
+                        backgroundColor: previewBtn,
+                        color: previewBtnText,
+                        borderRadius: settings.borderRadius,
+                      }}
+                    >
+                      Explorer →
+                    </span>
+                  </div>
+                </div>
+                <ColorField
+                  label="Fond du bouton principal"
+                  description="Couleur de fond des boutons CTA"
+                  value={settings.colorButton}
+                  onChange={handleButtonBgChange}
+                  showContrast
+                />
+                <ColorField
+                  label="Texte du bouton"
+                  description="Calculé automatiquement — peut être surchargé"
+                  value={settings.colorButtonText}
+                  onChange={set("colorButtonText")}
+                />
+                <ColorField
+                  label="Couleur au survol (hover)"
+                  description="Background quand la souris est sur le bouton"
+                  value={settings.colorButtonHover}
+                  onChange={set("colorButtonHover")}
+                  showContrast
+                />
               </div>
             </div>
-          </div>
+          )}
 
-          {/* 8. Border radius */}
-          <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
-            <SectionTitle icon={Sliders} title="📐 Arrondi des éléments" />
-            <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
-              {RADIUS_OPTIONS.map((r) => (
-                <button
-                  key={r.value}
-                  onClick={() => set("borderRadius")(r.value)}
-                  className={`flex flex-col items-center gap-2 p-3 rounded-lg border transition-all ${
-                    settings.borderRadius === r.value
-                      ? "border-nova-red/50 bg-nova-red/10 text-nova-red"
-                      : "border-white/5 bg-white/[0.02] text-white/40 hover:border-white/15 hover:text-white/70"
-                  }`}
-                >
+          {/* ── CARTE TAB ──────────────────────────────────────────────────── */}
+          {activeGroup === "carte" && (
+            <div className="space-y-5">
+              <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+                <SectionTitle icon={Grid3x3} title="Cartes & Cadres" />
+                <div className="mb-3 p-3 bg-white/[0.03] rounded-lg">
                   <div
-                    className="w-8 h-8 border-2 border-current"
-                    style={{ borderRadius: r.value === "9999px" ? "9999px" : r.value }}
-                  />
-                  <span className="text-[10px] text-center leading-tight">{r.label}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-          {/* 9. Dark Mode */}
-          <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
-            <SectionTitle icon={Moon} title="🌙 Mode Sombre" />
-            <p className="text-white/30 text-xs mb-4">
-              Définit le thème par défaut pour les visiteurs. Chaque utilisateur peut ensuite choisir son préférence via le bouton dans la navbar.
-            </p>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { value: "light",  label: "Clair",   Icon: Sun,     desc: "Fond blanc" },
-                { value: "dark",   label: "Sombre",  Icon: Moon,    desc: "Fond noir" },
-                { value: "system", label: "Système", Icon: Monitor, desc: "Selon l'OS" },
-              ].map(({ value, label, Icon, desc }) => (
-                <button
-                  key={value}
-                  onClick={() => set("defaultTheme")(value)}
-                  className={`flex flex-col items-center gap-2 p-4 rounded-xl border transition-all ${
-                    settings.defaultTheme === value
-                      ? "border-nova-red/50 bg-nova-red/10 text-nova-red"
-                      : "border-white/5 bg-white/[0.02] text-white/40 hover:border-white/15 hover:text-white/70"
-                  }`}
-                >
-                  <Icon size={20} />
-                  <span className="text-xs font-semibold">{label}</span>
-                  <span className="text-[10px] opacity-60">{desc}</span>
-                </button>
-              ))}
-            </div>
-            <div className="mt-4 p-3 bg-white/[0.03] rounded-lg flex items-start gap-2">
-              <Monitor size={13} className="text-white/30 mt-0.5 flex-shrink-0" />
-              <p className="text-white/30 text-xs">
-                Le mode sombre surcharge automatiquement les couleurs de fond, texte, cartes et navigation. Les couleurs de marque (primaire, secondaire) restent inchangées.
-              </p>
-            </div>
-          </div>
+                    className="p-4 max-w-[180px]"
+                    style={{
+                      backgroundColor: settings.colorCard,
+                      border: `1px solid ${settings.colorCardBorder}`,
+                      borderRadius: settings.borderRadius,
+                      boxShadow: {
+                        none: "none", light: "0 2px 8px rgba(0,0,0,0.06)",
+                        medium: "0 4px 20px rgba(0,0,0,0.10)", heavy: "0 8px 40px rgba(0,0,0,0.18)",
+                      }[settings.shadowStrength] || "0 4px 20px rgba(0,0,0,0.10)",
+                    }}
+                  >
+                    <p className="text-xs font-bold mb-1" style={{ color: settings.colorHeading }}>Carte exemple</p>
+                    <p className="text-[10px]" style={{ color: settings.colorText }}>Contenu de la carte</p>
+                  </div>
+                </div>
+                <ColorField label="Fond des cartes" value={settings.colorCard} onChange={set("colorCard")} showContrast />
+                <ColorField label="Bordure des cartes" value={settings.colorCardBorder} onChange={set("colorCardBorder")} />
 
-          {/* 10. Animations */}
-          <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
-            <SectionTitle icon={Zap} title="✨ Animations & Transitions" />
-            <p className="text-white/30 text-xs mb-4">
-              Contrôlez les animations Framer Motion et CSS sur l'ensemble du site. La désactivation améliore les performances et l'accessibilité.
-            </p>
-            <div className="flex items-center justify-between p-4 bg-white/[0.03] rounded-xl border border-white/5">
-              <div>
-                <p className="text-white text-sm font-medium">Animations activées</p>
-                <p className="text-white/30 text-xs mt-0.5">
-                  {settings.animationsEnabled !== "false"
-                    ? "Les transitions et animations Framer Motion sont actives"
-                    : "Toutes les animations sont désactivées — transitions instantanées"}
-                </p>
-              </div>
-              <button
-                onClick={() => set("animationsEnabled")(settings.animationsEnabled === "false" ? "true" : "false")}
-                className={`relative w-12 h-6 rounded-full transition-colors duration-200 flex-shrink-0 ${
-                  settings.animationsEnabled !== "false" ? "bg-nova-red" : "bg-white/10"
-                }`}
-              >
-                <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-200 ${
-                  settings.animationsEnabled !== "false" ? "translate-x-6" : "translate-x-0.5"
-                }`} />
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mt-3">
-              <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5">
-                <p className="text-white/50 text-xs font-medium mb-1">Avec animations</p>
-                <div className="space-y-1">
-                  <div className="h-2 bg-gradient-to-r from-nova-red to-nova-orange rounded-full animate-pulse" />
-                  <div className="h-2 w-3/4 bg-white/10 rounded-full" />
-                </div>
-              </div>
-              <div className="p-3 bg-white/[0.02] rounded-lg border border-white/5">
-                <p className="text-white/50 text-xs font-medium mb-1">Sans animations</p>
-                <div className="space-y-1">
-                  <div className="h-2 w-full bg-white/20 rounded-full" />
-                  <div className="h-2 w-3/4 bg-white/10 rounded-full" />
+                <div className="pt-3">
+                  <p className="text-white text-sm font-medium mb-2">Intensité de l'ombre</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {SHADOW_OPTIONS.map((o) => (
+                      <button
+                        key={o.value}
+                        onClick={() => set("shadowStrength")(o.value)}
+                        className={`py-2 px-3 text-xs rounded-lg border transition-all ${
+                          settings.shadowStrength === o.value
+                            ? "border-nova-red/50 bg-nova-red/10 text-nova-red"
+                            : "border-white/5 bg-white/[0.02] text-white/40 hover:border-white/15"
+                        }`}
+                      >
+                        {o.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         {/* ── Right: live preview ───────────────────────────────────────────── */}

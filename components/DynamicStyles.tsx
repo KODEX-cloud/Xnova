@@ -43,6 +43,17 @@ export default async function DynamicStyles() {
   const navText = settings.colorNavText || "#1F2937";
   const navHover = settings.colorNavHover || primary;
 
+  // Footer
+  const footerBg      = settings.colorFooterBg      || "#F9FAFB";
+  const footerText    = settings.colorFooterText    || "#6B7280";
+  const footerHeading = settings.colorFooterHeading || "#1F2937";
+  const footerHover   = settings.colorFooterHover   || primary;
+
+  // Hero, Overlays & Spacing
+  const heroStyle     = settings.heroStyle          || "gradient";
+  const overlayOpacity = settings.overlayOpacity     || "30";
+  const spacingMain   = settings.spacingMain        || "80px";
+
   // Auto-contrast helpers (server-computed)
   const onPrimary   = getContrastColor(primary);
   const onSecondary = getContrastColor(secondary);
@@ -50,6 +61,8 @@ export default async function DynamicStyles() {
   const onCard      = getContrastColor(card);
   const onNav       = getContrastColor(navBg);
   const onBtn       = getContrastColor(btn);
+  const onFooter    = getContrastColor(footerBg);
+  const onSectionAlt = getContrastColor(sectionAlt);
 
   const defaultTheme    = settings.defaultTheme    || "light";
   const animationsEnabled = settings.animationsEnabled !== "false";
@@ -90,6 +103,19 @@ export default async function DynamicStyles() {
   --nova-nav-text:     ${navText};
   --nova-nav-hover:    ${navHover};
 
+  /* ── Footer ─────────────────────────────── */
+  --nova-footer-bg:      ${footerBg};
+  --nova-footer-text:    ${footerText};
+  --nova-footer-heading: ${footerHeading};
+  --nova-footer-hover:   ${footerHover};
+
+  /* ── Hero Style & Overlays ───────────────── */
+  --nova-hero-style:     ${heroStyle};
+  --nova-overlay-opacity: ${Number(overlayOpacity) / 100};
+
+  /* ── Spacing ─────────────────────────────── */
+  --nova-spacing-main:   ${spacingMain};
+
   /* ── Shape & Font ───────────────────────── */
   --nova-radius:       ${radius};
   --nova-font:         ${font};
@@ -101,7 +127,10 @@ export default async function DynamicStyles() {
   --nova-on-card:      ${onCard};
   --nova-on-nav:       ${onNav};
   --nova-on-btn:       ${onBtn};
+  --nova-on-footer:    ${onFooter};
+  --nova-on-section-alt: ${onSectionAlt};
 }
+
 
 /* ── CRITICAL: Body background & text ────────────────────────────────────── */
 body {
@@ -208,7 +237,74 @@ h1, h2, h3, h4, h5, h6 {
 .bg-gray-50    { background-color: var(--nova-section-alt) !important; }
 .bg-gray-100   { background-color: color-mix(in srgb, var(--nova-section-alt) 80%, #e5e7eb) !important; }
 
-/* ── Auto-contrast safety rules ───────────────────────────────────────────── */
+/* ── Footer dynamic colors & contrast overrides ────────────────────────────── */
+footer, footer.bg-gray-50 {
+  background-color: var(--nova-footer-bg) !important;
+  color:            var(--nova-footer-text) !important;
+  border-color:     color-mix(in srgb, var(--nova-footer-text) 15%, transparent) !important;
+}
+footer h3, footer h4 {
+  color: var(--nova-footer-heading) !important;
+}
+footer a, footer p, footer span, footer div {
+  color: var(--nova-footer-text) !important;
+}
+footer a:hover {
+  color: var(--nova-footer-hover) !important;
+}
+footer .bg-white {
+  background-color: color-mix(in srgb, var(--nova-footer-bg) 95%, black) !important;
+  border-color:     color-mix(in srgb, var(--nova-footer-text) 10%, transparent) !important;
+}
+
+/* ── Hero section style & overlay dynamic overrides ────────────────────────── */
+body.hero-flat canvas { display: none !important; }
+body.hero-gradient canvas { display: none !important; }
+
+body.hero-flat #hero, body.hero-flat .relative.w-full.h-screen {
+  background: var(--nova-bg) !important;
+}
+body.hero-gradient #hero, body.hero-gradient .relative.w-full.h-screen {
+  background: linear-gradient(135deg, var(--nova-bg), var(--nova-primary)15) !important;
+}
+
+/* Overlay intensity dynamic override */
+.absolute.inset-0.bg-nova-darker\\/40,
+.absolute.inset-0.bg-black\\/70,
+.absolute.inset-0.bg-black\\/60 {
+  background-color: rgba(5, 8, 15, var(--nova-overlay-opacity)) !important;
+}
+
+/* ── Spacing main vertical rhythm overrides ────────────────────────────────── */
+.py-20, .lg\\:py-28 {
+  padding-top:    var(--nova-spacing-main) !important;
+  padding-bottom: var(--nova-spacing-main) !important;
+}
+.py-16 {
+  padding-top:    calc(var(--nova-spacing-main) * 0.8) !important;
+  padding-bottom: calc(var(--nova-spacing-main) * 0.8) !important;
+}
+.gap-8 {
+  gap: var(--nova-spacing-main) !important;
+}
+.gap-6 {
+  gap: calc(var(--nova-spacing-main) * 0.75) !important;
+}
+
+/* ── Auto-contrast safety overrides (prevent invisible text) ───────────────── */
+.nova-card {
+  color: var(--nova-on-card) !important;
+}
+.nova-btn {
+  color: var(--nova-on-btn) !important;
+}
+.bg-gray-50, .bg-gray-50 p, .bg-gray-50 span, .bg-gray-50 div {
+  color: var(--nova-on-section-alt) !important;
+}
+.bg-gray-50 h1, .bg-gray-50 h2, .bg-gray-50 h3, .bg-gray-50 h4 {
+  color: var(--nova-heading) !important;
+}
+
 [style*="background-color: #fff"],
 [style*="background-color: #ffffff"],
 [style*="background-color: white"],
@@ -216,6 +312,7 @@ h1, h2, h3, h4, h5, h6 {
 [style*="background: #fff"] {
   color: var(--nova-text);
 }
+
 
 /* ── DARK MODE ─────────────────────────────────────────────────────────────── */
 html.dark {
@@ -307,6 +404,9 @@ body.no-animations *::after {
   // Script: apply default theme if user has no preference stored yet
   const themeScript = `(function(){if(!localStorage.getItem('nova-theme')){var d=${JSON.stringify(defaultTheme)};if(d==='dark'||d==='system'){var prefersDark=window.matchMedia('(prefers-color-scheme: dark)').matches;var apply=d==='dark'||prefersDark;document.documentElement.classList.toggle('dark',apply);document.documentElement.classList.toggle('light',!apply);}}})();`;
 
+  // Script: apply body hero style class
+  const heroScript = `(function(){document.body.className = document.body.className.replace(/\\bhero-\\w+\\b/g, '') + ' hero-${heroStyle}';})();`;
+
   // Script: disable animations if turned off in admin
   const animScript = animationsEnabled ? "" : `document.body.classList.add('no-animations');`;
 
@@ -314,6 +414,7 @@ body.no-animations *::after {
     <Fragment>
       <style dangerouslySetInnerHTML={{ __html: css }} />
       <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      <script dangerouslySetInnerHTML={{ __html: heroScript }} />
       {!animationsEnabled && <script dangerouslySetInnerHTML={{ __html: animScript }} />}
     </Fragment>
   );

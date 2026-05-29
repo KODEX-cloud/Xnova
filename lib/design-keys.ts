@@ -14,9 +14,17 @@ export const DESIGN_KEYS = [
   "design.colorNavBg",
   "design.colorNavText",
   "design.colorNavHover",
+  "design.colorFooterBg",
+  "design.colorFooterText",
+  "design.colorFooterHeading",
+  "design.colorFooterHover",
+  "design.heroStyle",
+  "design.overlayOpacity",
+  "design.spacingMain",
   "design.borderRadius",
   "design.fontFamily",
   "design.shadowStrength",
   "design.defaultTheme",
   "design.animationsEnabled",
 ];
+
