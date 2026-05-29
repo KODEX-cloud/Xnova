@@ -4,6 +4,7 @@ import React, { useCallback, useState } from "react";
 import { Upload, X, Loader2, ImageIcon } from "lucide-react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import MediaLibraryModal from "./MediaLibraryModal";
 
 interface ImageUploaderProps {
   value: string[];
@@ -20,6 +21,7 @@ export default function ImageUploader({
 }: ImageUploaderProps) {
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const upload = useCallback(
     async (files: FileList | null) => {
@@ -59,9 +61,24 @@ export default function ImageUploader({
     [upload]
   );
 
+  const handleLibrarySelect = (urls: string[]) => {
+    onChange([...value, ...urls].slice(0, maxFiles));
+  };
+
   return (
     <div>
-      <label className="block text-sm font-medium text-white/60 mb-2">{label}</label>
+      <div className="flex items-center justify-between mb-2">
+        <label className="block text-sm font-medium text-white/60">{label}</label>
+        {value.length < maxFiles && (
+          <button
+            type="button"
+            onClick={() => setLibraryOpen(true)}
+            className="text-xs text-nova-red font-bold hover:underline flex items-center gap-1 transition-colors"
+          >
+            <ImageIcon size={13} /> Bibliothèque
+          </button>
+        )}
+      </div>
 
       {/* Drop Zone */}
       <div
@@ -129,7 +146,7 @@ export default function ImageUploader({
           {value.length < maxFiles && (
             <button
               type="button"
-              onClick={() => document.getElementById("image-input")?.click()}
+              onClick={() => setLibraryOpen(true)}
               className="aspect-square rounded-lg border border-dashed border-white/10 flex items-center justify-center text-white/20 hover:text-white/40 hover:border-white/20 transition-colors"
             >
               <ImageIcon size={20} />
@@ -137,6 +154,16 @@ export default function ImageUploader({
           )}
         </div>
       )}
+
+      {/* Media Picker Modal */}
+      <MediaLibraryModal
+        open={libraryOpen}
+        onClose={() => setLibraryOpen(false)}
+        onSelect={handleLibrarySelect}
+        multiple={maxFiles > 1}
+        maxFiles={maxFiles - value.length}
+      />
     </div>
   );
 }
+

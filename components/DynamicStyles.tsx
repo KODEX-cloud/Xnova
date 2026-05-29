@@ -139,10 +139,184 @@ body {
   font-family:      var(--nova-font) !important;
 }
 
-/* Admin panel gets its own dark override — scoped to the admin wrapper */
+/* ── PREMIUM LIGHT THEME FOR ADMIN BACKEND ────────────────────────────────── */
 .admin-shell {
-  background-color: #080D14 !important;
-  color: #ffffff !important;
+  background-color: #F3F4F6 !important;
+  color: #1F2937 !important;
+}
+
+/* Base text elements */
+.admin-shell p {
+  color: #4B5563 !important;
+}
+.admin-shell label {
+  color: #374151 !important;
+}
+
+/* Headings in light admin shell */
+.admin-shell h1, .admin-shell h2, .admin-shell h3,
+.admin-shell h4, .admin-shell h5, .admin-shell h6 {
+  color: #111827 !important;
+}
+
+/* Sidebar styling override */
+.admin-shell aside {
+  background-color: #FFFFFF !important;
+  border-right: 1px solid #E5E7EB !important;
+}
+.admin-shell aside p {
+  color: #9CA3AF !important; /* Sidebar sections */
+}
+.admin-shell aside a, .admin-shell aside button {
+  color: #4B5563 !important;
+}
+.admin-shell aside a:hover, .admin-shell aside button:hover {
+  background-color: #F3F4F6 !important;
+  color: #111827 !important;
+}
+.admin-shell aside a[class*="bg-nova-red/15"] {
+  background-color: rgba(249, 115, 22, 0.08) !important;
+  color: var(--nova-primary) !important;
+}
+.admin-shell aside div, .admin-shell aside nav {
+  border-color: #E5E7EB !important;
+}
+
+/* Header styling override */
+.admin-shell header {
+  background-color: #FFFFFF !important;
+  border-bottom: 1px solid #E5E7EB !important;
+}
+.admin-shell header span, .admin-shell header button {
+  color: #4B5563 !important;
+}
+.admin-shell header span[class*="text-white"] {
+  color: #111827 !important;
+}
+.admin-shell header div[class*="border-white/10"],
+.admin-shell header div[class*="border-l"] {
+  border-color: #E5E7EB !important;
+}
+
+/* Forms - fields styling */
+.admin-shell input[type="text"],
+.admin-shell input[type="number"],
+.admin-shell input[type="email"],
+.admin-shell input[type="password"],
+.admin-shell select,
+.admin-shell textarea {
+  background-color: #FFFFFF !important;
+  border: 1px solid #D1D5DB !important;
+  color: #111827 !important;
+}
+.admin-shell input[type="text"]:focus,
+.admin-shell input[type="number"]:focus,
+.admin-shell select:focus,
+.admin-shell textarea:focus {
+  border-color: var(--nova-primary) !important;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--nova-primary) 20%, transparent) !important;
+}
+.admin-shell input::placeholder,
+.admin-shell textarea::placeholder {
+  color: #9CA3AF !important;
+}
+
+/* Hardcoded dark cards bg-[#111827] and bg-white/[0.02] rewritten to light card panels */
+.admin-shell .bg-\[\#111827\],
+.admin-shell div[class*="bg-[#111827]"],
+.admin-shell .bg-white\/\[0\.02\],
+.admin-shell .bg-white\/\[0\.03\],
+.admin-shell .bg-white\/5,
+.admin-shell div[class*="bg-white/5"] {
+  background-color: #FFFFFF !important;
+  border-color: #E5E7EB !important;
+}
+.admin-shell div[class*="bg-[#111827]"] {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -1px rgba(0, 0, 0, 0.02) !important;
+  border: 1px solid #E5E7EB !important;
+  border-radius: var(--nova-radius) !important;
+}
+
+/* Borders globally */
+.admin-shell *[class*="border-white/5"],
+.admin-shell *[class*="border-white/10"],
+.admin-shell *[class*="border-white/15"],
+.admin-shell *[class*="border-b"],
+.admin-shell *[class*="border-t"] {
+  border-color: #E5E7EB !important;
+}
+
+/* Hardcoded white text overrides in cards and details */
+.admin-shell div[class*="text-white"],
+.admin-shell span[class*="text-white"],
+.admin-shell p[class*="text-white"],
+.admin-shell button[class*="text-white"] {
+  color: #1F2937 !important;
+}
+/* Allow red text, warnings, green and brand colors to pass through */
+.admin-shell .text-nova-red,
+.admin-shell .text-red-400,
+.admin-shell .text-green-400,
+.admin-shell button[class*="bg-nova-red"] * {
+  color: inherit !important;
+}
+/* Ensure the standard button text color remains light (white on red button) */
+.admin-shell button[class*="bg-nova-red"],
+.admin-shell a[class*="bg-nova-red"],
+.admin-shell label[class*="bg-nova-red"] {
+  color: #FFFFFF !important;
+}
+.admin-shell button[class*="bg-nova-red"] *,
+.admin-shell a[class*="bg-nova-red"] * {
+  color: #FFFFFF !important;
+}
+
+/* Tables in admin */
+.admin-shell table {
+  background-color: #FFFFFF !important;
+}
+.admin-shell table th {
+  background-color: #F9FAFB !important;
+  color: #374151 !important;
+  border-bottom: 1px solid #E5E7EB !important;
+}
+.admin-shell table td {
+  border-bottom: 1px solid #E5E7EB !important;
+  color: #4B5563 !important;
+}
+.admin-shell table tr:hover {
+  background-color: #F9FAFB !important;
+}
+.admin-shell table span, .admin-shell table p {
+  color: inherit !important;
+}
+
+/* Specific details fixes */
+.admin-shell p[class*="text-white/40"],
+.admin-shell p[class*="text-white/30"],
+.admin-shell p[class*="text-white/20"] {
+  color: #9CA3AF !important;
+}
+.admin-shell span[class*="text-white/"] {
+  color: #6B7280 !important;
+}
+.admin-shell div[class*="bg-white/10"],
+.admin-shell button[class*="bg-white/5"] {
+  background-color: #F3F4F6 !important;
+  border-color: #E5E7EB !important;
+}
+.admin-shell button[class*="bg-white/5"]:hover {
+  background-color: #E5E7EB !important;
+}
+.admin-shell select option {
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+}
+
+/* Admin headings stay white */
+.admin-shell h1, .admin-shell h2, .admin-shell h3,
+.admin-shell h4, .admin-shell h5, .admin-shell h6 {
+  color: inherit !important;
 }
 
 /* ── Headings ─────────────────────────────────────────────────────────────── */
@@ -384,10 +558,10 @@ html.dark .bg-white.border-l {
   border-color: rgba(255,255,255,0.06) !important;
 }
 
-/* Admin shell keeps its own dark — always dark, no override */
+/* Admin shell remains light even if page html is dark */
 html.dark .admin-shell {
-  background-color: #080D14 !important;
-  color: #ffffff !important;
+  background-color: #F3F4F6 !important;
+  color: #1F2937 !important;
 }
 
 /* ── ANIMATIONS KILL SWITCH ────────────────────────────────────────────────── */
