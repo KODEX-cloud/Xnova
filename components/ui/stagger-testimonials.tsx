@@ -27,36 +27,36 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({ position, testimonial
     <div
       onClick={() => handleMove(position)}
       className={cn(
-        "absolute left-1/2 top-1/2 cursor-pointer border-2 p-8 transition-all duration-500 ease-in-out",
-        isCenter ? "z-10 border-nova-red" : "z-0 border-white/10 hover:border-nova-red/40"
+        "absolute left-1/2 top-1/2 cursor-pointer border transition-all duration-500 ease-in-out rounded-2xl shadow-sm",
+        isCenter ? "z-10 border-nova-red shadow-xl" : "z-0 border-gray-200 hover:border-nova-red/40 hover:shadow-md"
       )}
       style={{
         width: cardSize, height: cardSize,
-        background: isCenter ? "linear-gradient(135deg, #E30613 0%, #FF6B00 100%)" : "rgba(10, 15, 28, 0.95)",
+        background: isCenter ? "linear-gradient(135deg, var(--nova-primary) 0%, var(--nova-secondary) 100%)" : "#FFFFFF",
         clipPath: `polygon(50px 0%, calc(100% - 50px) 0%, 100% 50px, 100% 100%, calc(100% - 50px) 100%, 50px 100%, 0 100%, 0 0)`,
         transform: `translate(-50%, -50%) translateX(${(cardSize / 1.5) * position}px) translateY(${isCenter ? -65 : position % 2 ? 15 : -15}px) rotate(${isCenter ? 0 : position % 2 ? 2.5 : -2.5}deg)`,
-        boxShadow: isCenter ? "0px 8px 0px 4px rgba(227, 6, 19, 0.3)" : "0px 0px 0px 0px transparent",
+        boxShadow: isCenter ? "0px 8px 0px 4px rgba(249, 115, 22, 0.2)" : "0px 0px 0px 0px transparent",
         backdropFilter: "blur(12px)",
       }}
     >
       <span className="absolute block origin-top-right rotate-45"
-        style={{ right: -2, top: 48, width: SQRT_5000, height: 2, background: isCenter ? "rgba(255,255,255,0.3)" : "rgba(255,255,255,0.1)" }} />
+        style={{ right: -2, top: 48, width: SQRT_5000, height: 2, background: isCenter ? "rgba(255,255,255,0.3)" : "rgba(0,0,0,0.06)" }} />
 
       <div className="flex mb-3">
         {[...Array(5)].map((_, i) => (
-          <Star key={i} className={cn("h-4 w-4 fill-current", isCenter ? "text-white" : "text-nova-yellow")} />
+          <Star key={i} className={cn("h-4 w-4 fill-current", isCenter ? "text-white" : "text-amber-500")} />
         ))}
       </div>
 
       <img src={testimonial.imgSrc} alt={testimonial.by.split(",")[0]}
-        className="mb-4 h-14 w-12 object-cover object-top"
-        style={{ boxShadow: isCenter ? "3px 3px 0px rgba(0,0,0,0.3)" : "3px 3px 0px rgba(0,0,0,0.5)" }} />
+        className="mb-4 h-14 w-12 object-cover object-top rounded-lg"
+        style={{ boxShadow: isCenter ? "3px 3px 0px rgba(0,0,0,0.15)" : "3px 3px 0px rgba(0,0,0,0.08)" }} />
 
-      <h3 className={cn("text-base sm:text-lg font-medium leading-snug", isCenter ? "text-white" : "text-white/90")}>
+      <h3 className={cn("text-base sm:text-lg font-bold leading-snug", isCenter ? "text-white" : "text-slate-800")}>
         &ldquo;{testimonial.testimonial}&rdquo;
       </h3>
 
-      <p className={cn("absolute bottom-8 left-8 right-8 mt-2 text-sm italic font-medium", isCenter ? "text-white/80" : "text-nova-gray")}>
+      <p className={cn("absolute bottom-8 left-8 right-8 mt-2 text-sm italic font-medium", isCenter ? "text-white/80" : "text-slate-500")}>
         — {testimonial.by}
       </p>
     </div>
@@ -124,7 +124,7 @@ export const StaggerTestimonials: React.FC<StaggerTestimonialsProps> = ({ initia
   if (testimonialsList.length === 0) return null;
 
   return (
-    <div className="relative w-full overflow-hidden bg-nova-dark/50" style={{ height: 600 }}>
+    <div className="relative w-full overflow-hidden bg-transparent" style={{ height: 600 }}>
       {testimonialsList.map((testimonial, index) => {
         const position = testimonialsList.length % 2
           ? index - (testimonialsList.length + 1) / 2
@@ -134,13 +134,13 @@ export const StaggerTestimonials: React.FC<StaggerTestimonialsProps> = ({ initia
             handleMove={handleMove} position={position} cardSize={cardSize} />
         );
       })}
-      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 z-20">
+      <div className="absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-3 z-20">
         <button onClick={() => handleMove(-1)}
-          className={cn("flex h-14 w-14 items-center justify-center text-2xl transition-colors", "bg-nova-dark border-2 border-white/10 hover:bg-nova-red hover:border-nova-red text-white")}
-          aria-label="Témoignage précédent"><ChevronLeft /></button>
+          className={cn("flex h-12 w-12 items-center justify-center text-xl transition-all rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-nova-red hover:text-white hover:border-nova-red shadow-sm")}
+          aria-label="Témoignage précédent"><ChevronLeft size={16} /></button>
         <button onClick={() => handleMove(1)}
-          className={cn("flex h-14 w-14 items-center justify-center text-2xl transition-colors", "bg-nova-dark border-2 border-white/10 hover:bg-nova-red hover:border-nova-red text-white")}
-          aria-label="Témoignage suivant"><ChevronRight /></button>
+          className={cn("flex h-12 w-12 items-center justify-center text-xl transition-all rounded-full bg-white border border-gray-200 text-gray-700 hover:bg-nova-red hover:text-white hover:border-nova-red shadow-sm")}
+          aria-label="Témoignage suivant"><ChevronRight size={16} /></button>
       </div>
     </div>
   );

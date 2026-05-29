@@ -488,23 +488,23 @@ body.hero-gradient #hero, body.hero-gradient .relative.w-full.h-screen {
 }
 
 
-/* ── DARK MODE ─────────────────────────────────────────────────────────────── */
+/* ── PREMIUM SLATE DARK THEME (HIGH VISIBILITY OVERRIDES) ─────────────────── */
 html.dark {
-  --nova-bg:           #0D1117;
-  --nova-text:         #F3F4F6;
+  --nova-bg:           #0F172A; /* Deep Slate 900 */
+  --nova-text:         #F8FAFC; /* Slate 50 (Ultra legible text) */
   --nova-heading:      #FFFFFF;
-  --nova-section-alt:  #111827;
-  --nova-card:         #1F2937;
-  --nova-card-border:  rgba(255,255,255,0.08);
-  --nova-nav-bg:       #0D1117;
-  --nova-nav-text:     #F3F4F6;
+  --nova-section-alt:  #1E293B; /* Slate 800 */
+  --nova-card:         #1E293B;
+  --nova-card-border:  rgba(255,255,255,0.12);
+  --nova-nav-bg:       #0F172A;
+  --nova-nav-text:     #F8FAFC;
   --nova-nav-hover:    var(--nova-primary);
-  --nova-shadow:       0 4px 24px rgba(0,0,0,0.4);
+  --nova-shadow:       0 10px 30px -5px rgba(0,0,0,0.3);
 }
 
 html.dark body {
-  background-color: #0D1117 !important;
-  color: #F3F4F6 !important;
+  background-color: #0F172A !important;
+  color: #F8FAFC !important;
 }
 
 html.dark h1, html.dark h2, html.dark h3,
@@ -513,49 +513,49 @@ html.dark h4, html.dark h5, html.dark h6 {
 }
 
 html.dark .bg-white {
-  background-color: #1F2937 !important;
+  background-color: #1E293B !important;
 }
 
 html.dark .bg-gray-50 {
-  background-color: #111827 !important;
+  background-color: #1E293B !important;
 }
 
 html.dark .bg-gray-100 {
-  background-color: #1F2937 !important;
+  background-color: #1E293B !important;
 }
 
-html.dark .text-gray-900 { color: #F9FAFB !important; }
-html.dark .text-gray-800 { color: #F3F4F6 !important; }
-html.dark .text-gray-700 { color: #E5E7EB !important; }
-html.dark .text-gray-600 { color: #D1D5DB !important; }
-html.dark .text-gray-500 { color: #9CA3AF !important; }
-html.dark .text-gray-400 { color: #6B7280 !important; }
+html.dark .text-gray-900 { color: #F8FAFC !important; }
+html.dark .text-gray-800 { color: #E2E8F0 !important; }
+html.dark .text-gray-700 { color: #CBD5E1 !important; }
+html.dark .text-gray-600 { color: #94A3B8 !important; }
+html.dark .text-gray-500 { color: #64748B !important; }
+html.dark .text-gray-400 { color: #475569 !important; }
 
 html.dark .border-gray-100 { border-color: rgba(255,255,255,0.06) !important; }
-html.dark .border-gray-200 { border-color: rgba(255,255,255,0.10) !important; }
+html.dark .border-gray-200 { border-color: rgba(255,255,255,0.12) !important; }
 
-html.dark .shadow-sm  { box-shadow: 0 1px 4px rgba(0,0,0,0.3)  !important; }
-html.dark .shadow-md  { box-shadow: 0 4px 16px rgba(0,0,0,0.4) !important; }
-html.dark .shadow-lg  { box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important; }
+html.dark .shadow-sm  { box-shadow: 0 2px 8px rgba(0,0,0,0.2)   !important; }
+html.dark .shadow-md  { box-shadow: 0 4px 16px rgba(0,0,0,0.3)  !important; }
+html.dark .shadow-lg  { box-shadow: 0 8px 32px rgba(0,0,0,0.4)  !important; }
 html.dark .shadow-xl  { box-shadow: 0 16px 48px rgba(0,0,0,0.5) !important; }
 html.dark .shadow-2xl { box-shadow: 0 24px 64px rgba(0,0,0,0.6) !important; }
 
 /* Navbar dark */
 html.dark header.fixed {
-  background-color: rgba(13,17,23,0.95) !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  background-color: rgba(15,23,42,0.95) !important;
+  border-color: rgba(255,255,255,0.08) !important;
 }
 
 /* Cards dark */
 html.dark .nova-card, html.dark .cms-card {
-  background-color: #1F2937 !important;
-  border-color: rgba(255,255,255,0.08) !important;
+  background-color: #1E293B !important;
+  border-color: rgba(255,255,255,0.12) !important;
 }
 
 /* Mobile panel dark */
 html.dark .bg-white.border-l {
-  background-color: #111827 !important;
-  border-color: rgba(255,255,255,0.06) !important;
+  background-color: #0F172A !important;
+  border-color: rgba(255,255,255,0.08) !important;
 }
 
 /* Admin shell remains light even if page html is dark */
