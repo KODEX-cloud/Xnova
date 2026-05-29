@@ -2,16 +2,10 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Car, Home, Users, Star, Award, MapPin } from "lucide-react";
-
-const STATS = [
-  { icon: Car,   value: 1200, suffix: "+", label: "Voitures",        sub: "Toutes marques",          accent: "from-nova-red to-nova-orange" },
-  { icon: Home,  value: 800,  suffix: "+", label: "Propriétés",      sub: "Villas & appartements",   accent: "from-blue-500 to-blue-400" },
-  { icon: Users, value: 5000, suffix: "+", label: "Clients satisfaits", sub: "Abidjan & CI",          accent: "from-emerald-500 to-teal-400" },
-  { icon: Star,  value: 4.9,  suffix: "/5", label: "Note moyenne",   sub: "1 200 avis vérifiés",     accent: "from-amber-400 to-yellow-300", isDecimal: true },
-  { icon: Award, value: 8,    suffix: " ans", label: "D'expérience", sub: "Leader du marché",         accent: "from-purple-500 to-violet-400" },
-  { icon: MapPin,value: 7,    suffix: " villes", label: "Présence",  sub: "Bouaké, San-Pédro…",      accent: "from-rose-500 to-pink-400" },
-];
+import { Star } from "lucide-react";
+import type { HomepageConfig } from "@/lib/homepage-keys";
+import { HOMEPAGE_DEFAULTS } from "@/lib/homepage-keys";
+import DynamicLucideIcon from "@/components/ui/DynamicLucideIcon";
 
 function Counter({ value, suffix, isDecimal, run }: { value: number; suffix: string; isDecimal?: boolean; run: boolean }) {
   const [display, setDisplay] = useState(0);
@@ -38,9 +32,12 @@ function Counter({ value, suffix, isDecimal, run }: { value: number; suffix: str
   );
 }
 
-export default function StatsSection() {
+export default function StatsSection({ config }: { config?: HomepageConfig }) {
   const ref = useRef<HTMLDivElement>(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
+  const statsList = config?.stats || HOMEPAGE_DEFAULTS.stats;
+  const title = config?.statsTitle || HOMEPAGE_DEFAULTS.statsTitle;
+  const subtitle = config?.statsSubtitle || HOMEPAGE_DEFAULTS.statsSubtitle;
 
   return (
     <section className="relative py-20 lg:py-28 bg-[#0D1117] overflow-hidden" ref={ref}>
@@ -59,9 +56,9 @@ export default function StatsSection() {
         {/* Header */}
         <div className="text-center mb-16">
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={inView ? { opacity: 1, y: 0 } : {}}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-nova-orange text-xs font-bold uppercase tracking-widest mb-6"
+             initial={{ opacity: 0, y: -10 }}
+             animate={inView ? { opacity: 1, y: 0 } : {}}
+             className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-nova-orange text-xs font-bold uppercase tracking-widest mb-6"
           >
             <Star className="h-3.5 w-3.5 fill-nova-orange" />
             NOVA en chiffres
@@ -72,10 +69,14 @@ export default function StatsSection() {
             transition={{ delay: 0.1 }}
             className="text-3xl md:text-5xl font-black text-white mb-4 leading-tight"
           >
-            La confiance,{" "}
-            <span className="bg-gradient-to-r from-nova-red via-nova-orange to-amber-400 bg-clip-text text-transparent">
-              ça se mesure
-            </span>
+            {title.split(",").length > 1 ? (
+              <>
+                {title.split(",")[0].trim()},{" "}
+                <span className="bg-gradient-to-r from-nova-red via-nova-orange to-amber-400 bg-clip-text text-transparent">
+                  {title.split(",")[1].trim()}
+                </span>
+              </>
+            ) : title}
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
@@ -83,14 +84,13 @@ export default function StatsSection() {
             transition={{ delay: 0.2 }}
             className="text-white/50 text-lg max-w-2xl mx-auto"
           >
-            Des milliers de clients font confiance à NOVA chaque mois pour leurs projets automobile et immobilier
+            {subtitle}
           </motion.p>
         </div>
 
         {/* Stats grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 lg:gap-6">
-          {STATS.map((s, i) => {
-            const Icon = s.icon;
+          {statsList.map((s, i) => {
             return (
               <motion.div
                 key={s.label}
@@ -105,7 +105,7 @@ export default function StatsSection() {
 
                 {/* Icon */}
                 <div className={`w-12 h-12 mx-auto mb-4 rounded-xl bg-gradient-to-br ${s.accent} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className="h-6 w-6 text-white" />
+                  <DynamicLucideIcon name={s.icon} className="h-6 w-6 text-white" />
                 </div>
 
                 {/* Number */}

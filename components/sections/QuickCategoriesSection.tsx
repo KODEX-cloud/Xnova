@@ -2,72 +2,16 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { CarFront, Key, Home, Building2, MapPin, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import type { HomepageConfig } from "@/lib/homepage-keys";
+import { HOMEPAGE_DEFAULTS } from "@/lib/homepage-keys";
+import DynamicLucideIcon from "@/components/ui/DynamicLucideIcon";
 
-const CATEGORIES = [
-  {
-    icon: CarFront,
-    label: "Acheter une voiture",
-    description: "Neuves et occasions",
-    href: "/automobile/vente",
-    gradient: "from-orange-500 to-red-500",
-    glow: "shadow-orange-200/80",
-    badge: "1 200+ offres",
-    badgeColor: "text-orange-600 bg-orange-50",
-    hoverBorder: "hover:border-orange-200",
-    bg: "from-orange-50/80 to-white",
-  },
-  {
-    icon: Key,
-    label: "Louer une voiture",
-    description: "Dès 25 000 CFA/jour",
-    href: "/automobile/location",
-    gradient: "from-amber-500 to-orange-400",
-    glow: "shadow-amber-200/80",
-    badge: "Courte durée",
-    badgeColor: "text-amber-700 bg-amber-50",
-    hoverBorder: "hover:border-amber-200",
-    bg: "from-amber-50/80 to-white",
-  },
-  {
-    icon: Home,
-    label: "Acheter une maison",
-    description: "Villas, appartements",
-    href: "/immobilier/vente",
-    gradient: "from-blue-500 to-indigo-500",
-    glow: "shadow-blue-200/80",
-    badge: "500+ biens",
-    badgeColor: "text-blue-700 bg-blue-50",
-    hoverBorder: "hover:border-blue-200",
-    bg: "from-blue-50/80 to-white",
-  },
-  {
-    icon: Building2,
-    label: "Louer un bien",
-    description: "Meublé & non meublé",
-    href: "/immobilier/location",
-    gradient: "from-emerald-500 to-teal-500",
-    glow: "shadow-emerald-200/80",
-    badge: "Longue durée",
-    badgeColor: "text-emerald-700 bg-emerald-50",
-    hoverBorder: "hover:border-emerald-200",
-    bg: "from-emerald-50/80 to-white",
-  },
-  {
-    icon: MapPin,
-    label: "Acheter un terrain",
-    description: "Titres fonciers sécurisés",
-    href: "/immobilier/terrains",
-    gradient: "from-purple-500 to-violet-500",
-    glow: "shadow-purple-200/80",
-    badge: "Titres fonciers",
-    badgeColor: "text-purple-700 bg-purple-50",
-    hoverBorder: "hover:border-purple-200",
-    bg: "from-purple-50/80 to-white",
-  },
-];
+export default function QuickCategoriesSection({ config }: { config?: HomepageConfig }) {
+  const categoriesList = config?.categories || HOMEPAGE_DEFAULTS.categories;
+  const title = config?.categoriesTitle || HOMEPAGE_DEFAULTS.categoriesTitle;
+  const subtitle = config?.categoriesSubtitle || HOMEPAGE_DEFAULTS.categoriesSubtitle;
 
-export default function QuickCategoriesSection() {
   return (
     <section className="py-16 lg:py-20 bg-white relative overflow-hidden">
       {/* Subtle background */}
@@ -93,7 +37,12 @@ export default function QuickCategoriesSection() {
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
           >
-            Que recherchez-vous ?
+            {title.split("?").length > 1 ? (
+              <>
+                {title.split("?")[0].trim()}{" "}
+                <span className="gradient-text-nova">?</span>
+              </>
+            ) : title}
           </motion.h2>
           <motion.p
             className="text-gray-500 mt-2 text-base"
@@ -102,13 +51,12 @@ export default function QuickCategoriesSection() {
             viewport={{ once: true }}
             transition={{ delay: 0.15 }}
           >
-            Sélectionnez une catégorie pour démarrer votre recherche
+            {subtitle}
           </motion.p>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 lg:gap-5">
-          {CATEGORIES.map((cat, i) => {
-            const Icon = cat.icon;
+          {categoriesList.map((cat, i) => {
             return (
               <motion.div
                 key={cat.label}
@@ -127,7 +75,7 @@ export default function QuickCategoriesSection() {
 
                   {/* Icon */}
                   <div className={`relative w-16 h-16 bg-gradient-to-br ${cat.gradient} rounded-2xl flex items-center justify-center mb-4 shadow-lg ${cat.glow} group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                    <Icon className="h-8 w-8 text-white" />
+                    <DynamicLucideIcon name={cat.icon} className="h-8 w-8 text-white" />
                     {/* Shine effect */}
                     <div className="absolute inset-0 rounded-2xl overflow-hidden">
                       <div className="absolute top-0 left-0 w-full h-1/2 bg-white/15 rounded-t-2xl" />

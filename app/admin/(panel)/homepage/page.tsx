@@ -12,7 +12,7 @@ import type { HomepageConfig } from "@/lib/homepage-keys";
 
 // ── Tab IDs ───────────────────────────────────────────────────────────────────
 
-type Tab = "hero" | "sections" | "cta";
+type Tab = "hero" | "sections" | "cta" | "content";
 
 // ── Field components ──────────────────────────────────────────────────────────
 
@@ -425,6 +425,166 @@ function CtaTab({ config, set }: { config: HomepageConfig; set: (k: keyof Homepa
   );
 }
 
+// ── Content Tab (Stats, Benefits, Categories) ──────────────────────────────────
+
+function ContentTab({ config, set }: { config: HomepageConfig; set: (k: keyof HomepageConfig, v: any) => void }) {
+  const [stats, setStats] = useState(config.stats || []);
+  const [whyNova, setWhyNova] = useState(config.whyNova || []);
+  const [categories, setCategories] = useState(config.categories || []);
+
+  const updateStats = (s: typeof stats) => { setStats(s); set("stats", s); };
+  const updateWhyNova = (w: typeof whyNova) => { setWhyNova(w); set("whyNova", w); };
+  const updateCategories = (c: typeof categories) => { setCategories(c); set("categories", c); };
+
+  return (
+    <div className="space-y-6">
+      {/* Statistiques Section */}
+      <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+        <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2 border-b border-white/5 pb-3">
+          <Palette size={15} className="text-white/40" /> Section Statistiques
+        </h2>
+        <Field label="Titre principal">
+          <TextInput value={config.statsTitle} onChange={v => set("statsTitle", v)} placeholder="La confiance, ça se mesure" />
+        </Field>
+        <Field label="Sous-titre">
+          <TextArea value={config.statsSubtitle} onChange={v => set("statsSubtitle", v)} placeholder="Description sous le titre..." />
+        </Field>
+
+        <div className="mt-4 space-y-4">
+          <p className="text-white/40 text-xs font-semibold uppercase tracking-wider">Compteurs (6 maximum)</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {stats.map((s, i) => (
+              <div key={i} className="p-4 bg-white/[0.02] rounded-xl border border-white/5 space-y-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-white/55 text-xs font-bold uppercase">Compteur {i+1}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Icône Lucide</label>
+                    <TextInput value={s.icon} onChange={v => { const next = [...stats]; next[i] = { ...next[i], icon: v }; updateStats(next); }} placeholder="Car, Home, Users..." />
+                  </div>
+                  <div>
+                    <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Valeur</label>
+                    <input type="number" value={s.value} onChange={e => { const next = [...stats]; next[i] = { ...next[i], value: Number(e.target.value) }; updateStats(next); }} className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-white text-sm" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Suffixe</label>
+                    <TextInput value={s.suffix} onChange={v => { const next = [...stats]; next[i] = { ...next[i], suffix: v }; updateStats(next); }} placeholder="+ ou /5..." />
+                  </div>
+                  <div>
+                    <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Libellé</label>
+                    <TextInput value={s.label} onChange={v => { const next = [...stats]; next[i] = { ...next[i], label: v }; updateStats(next); }} placeholder="Voitures..." />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Sous-texte</label>
+                  <TextInput value={s.sub} onChange={v => { const next = [...stats]; next[i] = { ...next[i], sub: v }; updateStats(next); }} placeholder="Toutes marques..." />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Pourquoi Choisir NOVA Section */}
+      <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+        <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2 border-b border-white/5 pb-3">
+          <Palette size={15} className="text-white/40" /> Section Pourquoi NOVA
+        </h2>
+        <Field label="Titre principal">
+          <TextInput value={config.whyNovaTitle} onChange={v => set("whyNovaTitle", v)} placeholder="La plateforme qui vous fait confiance" />
+        </Field>
+        <Field label="Sous-titre">
+          <TextArea value={config.whyNovaSubtitle} onChange={v => set("whyNovaSubtitle", v)} placeholder="Description..." />
+        </Field>
+
+        <div className="mt-4 space-y-4">
+          <p className="text-white/40 text-xs font-semibold uppercase tracking-wider">Cartes d'avantages (6 maximum)</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {whyNova.map((item, i) => (
+              <div key={i} className="p-4 bg-white/[0.02] rounded-xl border border-white/5 space-y-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-white/55 text-xs font-bold uppercase">Avantage {i+1}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Icône Lucide</label>
+                    <TextInput value={item.icon} onChange={v => { const next = [...whyNova]; next[i] = { ...next[i], icon: v }; updateWhyNova(next); }} placeholder="ShieldCheck, Headphones..." />
+                  </div>
+                  <div>
+                    <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Titre</label>
+                    <TextInput value={item.title} onChange={v => { const next = [...whyNova]; next[i] = { ...next[i], title: v }; updateWhyNova(next); }} placeholder="Transactions sécurisées..." />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Description</label>
+                  <TextArea value={item.description} onChange={v => { const next = [...whyNova]; next[i] = { ...next[i], description: v }; updateWhyNova(next); }} rows={2} placeholder="Description longue..." />
+                </div>
+                <div>
+                  <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Badge d'accroche</label>
+                  <TextInput value={item.chip.label} onChange={v => { const next = [...whyNova]; next[i] = { ...next[i], chip: { ...next[i].chip, label: v } }; updateWhyNova(next); }} placeholder="Sécurisé..." />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Catégories Section */}
+      <div className="bg-[#111827] border border-white/5 rounded-xl p-5">
+        <h2 className="text-white font-semibold text-sm mb-4 flex items-center gap-2 border-b border-white/5 pb-3">
+          <Palette size={15} className="text-white/40" /> Section Catégories
+        </h2>
+        <Field label="Titre principal">
+          <TextInput value={config.categoriesTitle} onChange={v => set("categoriesTitle", v)} placeholder="Que recherchez-vous ?" />
+        </Field>
+        <Field label="Sous-titre">
+          <TextArea value={config.categoriesSubtitle} onChange={v => set("categoriesSubtitle", v)} placeholder="Description..." />
+        </Field>
+
+        <div className="mt-4 space-y-4">
+          <p className="text-white/40 text-xs font-semibold uppercase tracking-wider">Boutons catégories (5 maximum)</p>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {categories.map((cat, i) => (
+              <div key={i} className="p-4 bg-white/[0.02] rounded-xl border border-white/5 space-y-2">
+                <div className="flex justify-between items-center mb-1">
+                  <span className="text-white/55 text-xs font-bold uppercase">Bouton {i+1}</span>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Icône Lucide</label>
+                    <TextInput value={cat.icon} onChange={v => { const next = [...categories]; next[i] = { ...next[i], icon: v }; updateCategories(next); }} placeholder="CarFront, Key, Home..." />
+                  </div>
+                  <div>
+                    <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Titre</label>
+                    <TextInput value={cat.label} onChange={v => { const next = [...categories]; next[i] = { ...next[i], label: v }; updateCategories(next); }} placeholder="Acheter une voiture..." />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Description</label>
+                    <TextInput value={cat.description} onChange={v => { const next = [...categories]; next[i] = { ...next[i], description: v }; updateCategories(next); }} placeholder="Neuves et occasions..." />
+                  </div>
+                  <div>
+                    <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Badge</label>
+                    <TextInput value={cat.badge} onChange={v => { const next = [...categories]; next[i] = { ...next[i], badge: v }; updateCategories(next); }} placeholder="1 200+ offres..." />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-white/30 text-[9px] font-medium uppercase tracking-wider block mb-1">Lien de redirection</label>
+                  <TextInput value={cat.href} onChange={v => { const next = [...categories]; next[i] = { ...next[i], href: v }; updateCategories(next); }} placeholder="/automobile/vente..." />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function HomepagePage() {
@@ -522,6 +682,7 @@ export default function HomepagePage() {
     { id: "hero",     label: "Hero",     Icon: Film },
     { id: "sections", label: "Sections", Icon: LayoutTemplate },
     { id: "cta",      label: "CTA",      Icon: Megaphone },
+    { id: "content",  label: "Contenus", Icon: Type },
   ];
 
   return (
@@ -589,6 +750,7 @@ export default function HomepagePage() {
       {tab === "hero"     && <HeroTab     config={config} set={set} />}
       {tab === "sections" && <SectionsTab config={config} set={set} />}
       {tab === "cta"      && <CtaTab      config={config} set={set} />}
+      {tab === "content"  && <ContentTab  config={config} set={set} />}
     </div>
   );
 }

@@ -30,10 +30,10 @@ async function getHomepageConfig(): Promise<HomepageConfig> {
 }
 
 const SECTION_MAP: Record<string, (config: HomepageConfig) => ReactNode> = {
-  stats:      () => <StatsSection />,
-  categories: () => <QuickCategoriesSection />,
+  stats:      (c) => <StatsSection config={c} />,
+  categories: (c) => <QuickCategoriesSection config={c} />,
   offers:     () => <FeaturedListings />,
-  whyNova:    () => <WhyNovaSection />,
+  whyNova:    (c) => <WhyNovaSection config={c} />,
   blog:       () => <BlogSection />,
   cta:        (c) => <HomepageCtaSection config={c} />,
 };
