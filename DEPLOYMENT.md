@@ -299,3 +299,36 @@ Après tout déploiement ou retour arrière, effectuez ces tests rapides :
 4. **Vérification des Logs** :
    *   Sur le VPS : `pm2 logs nova-app`
    *   Dans Nginx : `tail -f /var/log/nginx/error.log`
+
+---
+
+## 8. Déploiement de la Version PHP Native (CMS-First) sur Hostinger
+
+La version PHP Native de NOVA a été conçue pour être déployée sur n'importe quelle formule d'hébergement Hostinger (Mutualisé, Cloud, ou VPS) avec PHP 8.3 et MySQL.
+
+### 8.1 Préparation de la Base de Données
+1. Connectez-vous à votre **hPanel Hostinger**.
+2. Allez dans **Bases de données** > **Gestion des bases de données MySQL**.
+3. Créez une nouvelle base de données et notez les informations :
+   * Nom de la base de données
+   * Identifiant de l'utilisateur
+   * Mot de passe
+4. Cliquez sur **Entrer dans phpMyAdmin**.
+5. Importez le schéma de table en chargeant le fichier [schema.sql](file:///c:/Users/PC/AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/Nova/php/database/schema.sql).
+6. Importez le jeu de données initial en chargeant le fichier [seed.sql](file:///c:/Users/PC/AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/Nova/php/database/seed.sql).
+
+### 8.2 Déploiement des Fichiers
+1. Dans le **Gestionnaire de fichiers** de Hostinger (ou par FTP), accédez au répertoire de votre site (généralement `public_html`).
+2. Copiez l'ensemble du contenu du sous-répertoire `/php/` de votre dépôt Git directement dans le dossier racine de votre nom de domaine sur Hostinger.
+3. Assurez-vous que le dossier `public` de PHP est défini comme le dossier racine web (Document Root), ou utilisez le fichier `.htaccess` fourni pour rediriger le trafic transparent.
+
+### 8.3 Configuration du Site
+Ouvrez le fichier `config/config.php` sur le serveur et renseignez les identifiants de la base de données de production :
+```php
+define('DB_HOST', 'localhost'); // Ou l'hôte MySQL Hostinger
+define('DB_USER', 'u123456789_nova');
+define('DB_PASS', 'VotreMotDePasseBaseDeDonnees');
+define('DB_NAME', 'u123456789_novadb');
+```
+
+L'application PHP Native est immédiatement fonctionnelle. Pour accéder à l'administration, rendez-vous sur `https://votre-domaine.com/auth/login` (Identifiants par défaut : `admin@nova.ci` / `admin123`).
