@@ -153,6 +153,21 @@ $fontFamily = $settings['design.font-family'] ?? 'Outfit, Inter, sans-serif';
                     </a>
                 </li>
                 <li>
+                    <a href="<?= BASE_URL ?>/admin/cars" class="admin-menu-link">
+                        Automobiles
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= BASE_URL ?>/admin/properties" class="admin-menu-link">
+                        Immobilier
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= BASE_URL ?>/admin/blog" class="admin-menu-link">
+                        Blog
+                    </a>
+                </li>
+                <li>
                     <a href="<?= BASE_URL ?>/admin/medias" class="admin-menu-link">
                         Bibliothèque Médias
                     </a>

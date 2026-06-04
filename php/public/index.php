@@ -72,6 +72,30 @@ $router->get('/admin/pages', 'Admin/PageController@index', ['admin']);
 $router->get('/admin/pages/edit/:id', 'Admin/PageController@edit', ['admin']);
 $router->post('/admin/pages/update/:id', 'Admin/PageController@update', ['admin']);
 
+// Automobiles Admin CRUD
+$router->get('/admin/cars', 'Admin/CarController@index', ['admin']);
+$router->get('/admin/cars/new', 'Admin/CarController@new', ['admin']);
+$router->post('/admin/cars/create', 'Admin/CarController@create', ['admin']);
+$router->get('/admin/cars/edit/:id', 'Admin/CarController@edit', ['admin']);
+$router->post('/admin/cars/update/:id', 'Admin/CarController@update', ['admin']);
+$router->post('/admin/cars/delete/:id', 'Admin/CarController@delete', ['admin']);
+
+// Immobilier Admin CRUD
+$router->get('/admin/properties', 'Admin/PropertyController@index', ['admin']);
+$router->get('/admin/properties/new', 'Admin/PropertyController@new', ['admin']);
+$router->post('/admin/properties/create', 'Admin/PropertyController@create', ['admin']);
+$router->get('/admin/properties/edit/:id', 'Admin/PropertyController@edit', ['admin']);
+$router->post('/admin/properties/update/:id', 'Admin/PropertyController@update', ['admin']);
+$router->post('/admin/properties/delete/:id', 'Admin/PropertyController@delete', ['admin']);
+
+// Blog Admin CRUD
+$router->get('/admin/blog', 'Admin/BlogController@index', ['admin']);
+$router->get('/admin/blog/new', 'Admin/BlogController@new', ['admin']);
+$router->post('/admin/blog/create', 'Admin/BlogController@create', ['admin']);
+$router->get('/admin/blog/edit/:id', 'Admin/BlogController@edit', ['admin']);
+$router->post('/admin/blog/update/:id', 'Admin/BlogController@update', ['admin']);
+$router->post('/admin/blog/delete/:id', 'Admin/BlogController@delete', ['admin']);
+
 // Resolve incoming URL path and dispatch to MVC controller
 $requestUrl = $_SERVER['REQUEST_URI'] ?? '/';
 // Remove subfolder path if running inside a subdirectory (like /php/public)
