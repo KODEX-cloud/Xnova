@@ -52,7 +52,7 @@ INSERT INTO `properties` (`id`, `title`, `slug`, `description`, `price`, `price_
 
 -- ── Seeding Default Blog Posts ────────────────────────────────────────────────
 INSERT INTO `blog_posts` (`id`, `title`, `slug`, `content`, `excerpt`, `cover_image`, `category`, `tags`, `author`, `status`, `published_at`, `views`, `read_time`) VALUES
-('blog-001', 'Guide d\'achat : Choisir son véhicule d\'occasion à Abidjan', '<p>Acheter un véhicule d\'occasion à Abidjan peut s\'avérer complexe...</p>', 'Les points clés à vérifier avant d\'acheter votre véhicule de seconde main à Abidjan.', '/uploads/blog-cover1.jpg', 'guides', '["automobile", "achat", "conseils"]', 'L\'équipe NOVA', 'PUBLISHED', CURRENT_TIMESTAMP, 98, 4);
+('blog-001', 'Guide d\'achat : Choisir son véhicule d\'occasion à Abidjan', 'guide-achat-choisir-vehicule-occasion-abidjan', '<p>Acheter un véhicule d\'occasion à Abidjan peut s\'avérer complexe...</p>', 'Les points clés à vérifier avant d\'acheter votre véhicule de seconde main à Abidjan.', '/uploads/blog-cover1.jpg', 'guides', '["automobile", "achat", "conseils"]', 'L\'équipe NOVA', 'PUBLISHED', CURRENT_TIMESTAMP, 98, 4);
 
 -- ── Seeding Testimonials ──────────────────────────────────────────────────────
 INSERT INTO `testimonials` (`id`, `name`, `role`, `company`, `avatar`, `content`, `rating`, `is_active`, `order`) VALUES
