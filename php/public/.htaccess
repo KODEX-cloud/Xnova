@@ -1,0 +1,17 @@
+# NOVA Marketplace — Apache URL Rewriting for MVC Router
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # Prevent directory listing
+    Options -Indexes
+
+    # Redirect trailing slashes if not a directory
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)/$ /$1 [L,R=301]
+
+    # Redirect to index.php if the requested file/directory does not exist
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^(.*)$ index.php [L,QSA]
+</IfModule>
