@@ -59,6 +59,11 @@ $router->get('/immobilier/:slug', 'PropertyController@detail');
 $router->get('/blog', 'BlogController@index');
 $router->get('/blog/:slug', 'BlogController@detail');
 
+$router->get('/services', 'ServiceController@index');
+$router->get('/services/:id', 'ServiceController@detail');
+
+$router->get('/annonces', 'AnnonceController@index');
+
 // ── Admin Panel Routes ────────────────────────────────────────────────────────
 $router->get('/admin', 'Admin/AdminController@dashboard', ['admin']);
 $router->get('/admin/medias', 'Admin/MediaController@index', ['admin']);
@@ -95,6 +100,51 @@ $router->post('/admin/blog/create', 'Admin/BlogController@create', ['admin']);
 $router->get('/admin/blog/edit/:id', 'Admin/BlogController@edit', ['admin']);
 $router->post('/admin/blog/update/:id', 'Admin/BlogController@update', ['admin']);
 $router->post('/admin/blog/delete/:id', 'Admin/BlogController@delete', ['admin']);
+
+// Page Builder API/Actions
+$router->post('/admin/pages/builder/add/:id', 'Admin/PageBuilderController@addSection', ['admin']);
+$router->get('/admin/pages/builder/delete/:id/:sectionId', 'Admin/PageBuilderController@deleteSection', ['admin']);
+$router->get('/admin/pages/builder/toggle/:id/:sectionId', 'Admin/PageBuilderController@toggleSection', ['admin']);
+$router->get('/admin/pages/builder/move/:id/:sectionId/:direction', 'Admin/PageBuilderController@moveSection', ['admin']);
+
+// Menus Admin CRUD
+$router->get('/admin/menus', 'Admin/MenuController@index', ['admin']);
+$router->post('/admin/menus/create', 'Admin/MenuController@create', ['admin']);
+$router->get('/admin/menus/edit/:id', 'Admin/MenuController@edit', ['admin']);
+$router->post('/admin/menus/update/:id', 'Admin/MenuController@update', ['admin']);
+$router->post('/admin/menus/delete/:id', 'Admin/MenuController@delete', ['admin']);
+
+// Testimonials Admin CRUD
+$router->get('/admin/testimonials', 'Admin/TestimonialController@index', ['admin']);
+$router->get('/admin/testimonials/new', 'Admin/TestimonialController@new', ['admin']);
+$router->post('/admin/testimonials/create', 'Admin/TestimonialController@create', ['admin']);
+$router->get('/admin/testimonials/edit/:id', 'Admin/TestimonialController@edit', ['admin']);
+$router->post('/admin/testimonials/update/:id', 'Admin/TestimonialController@update', ['admin']);
+$router->post('/admin/testimonials/delete/:id', 'Admin/TestimonialController@delete', ['admin']);
+
+// Promotions Admin CRUD
+$router->get('/admin/promotions', 'Admin/PromotionController@index', ['admin']);
+$router->get('/admin/promotions/new', 'Admin/PromotionController@new', ['admin']);
+$router->post('/admin/promotions/create', 'Admin/PromotionController@create', ['admin']);
+$router->get('/admin/promotions/edit/:id', 'Admin/PromotionController@edit', ['admin']);
+$router->post('/admin/promotions/update/:id', 'Admin/PromotionController@update', ['admin']);
+$router->post('/admin/promotions/delete/:id', 'Admin/PromotionController@delete', ['admin']);
+
+// Leads Admin Management
+$router->get('/admin/leads', 'Admin/LeadController@index', ['admin']);
+$router->get('/admin/leads/view/:id', 'Admin/LeadController@view', ['admin']);
+$router->post('/admin/leads/toggle/:id', 'Admin/LeadController@toggle', ['admin']);
+$router->post('/admin/leads/delete/:id', 'Admin/LeadController@delete', ['admin']);
+
+// Users Admin Management
+$router->get('/admin/users', 'Admin/UserController@index', ['admin']);
+$router->get('/admin/users/edit/:id', 'Admin/UserController@edit', ['admin']);
+$router->post('/admin/users/update/:id', 'Admin/UserController@update', ['admin']);
+$router->post('/admin/users/delete/:id', 'Admin/UserController@delete', ['admin']);
+
+// Global Settings Admin
+$router->get('/admin/settings', 'Admin/SettingController@index', ['admin']);
+$router->post('/admin/settings/update', 'Admin/SettingController@update', ['admin']);
 
 // Resolve incoming URL path and dispatch to MVC controller
 $requestUrl = $_SERVER['REQUEST_URI'] ?? '/';

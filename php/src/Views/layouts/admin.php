@@ -153,6 +153,11 @@ $fontFamily = $settings['design.font-family'] ?? 'Outfit, Inter, sans-serif';
                     </a>
                 </li>
                 <li>
+                    <a href="<?= BASE_URL ?>/admin/menus" class="admin-menu-link">
+                        Gestion des Menus
+                    </a>
+                </li>
+                <li>
                     <a href="<?= BASE_URL ?>/admin/cars" class="admin-menu-link">
                         Automobiles
                     </a>
@@ -168,6 +173,26 @@ $fontFamily = $settings['design.font-family'] ?? 'Outfit, Inter, sans-serif';
                     </a>
                 </li>
                 <li>
+                    <a href="<?= BASE_URL ?>/admin/testimonials" class="admin-menu-link">
+                        Témoignages
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= BASE_URL ?>/admin/promotions" class="admin-menu-link">
+                        Promotions
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= BASE_URL ?>/admin/leads" class="admin-menu-link">
+                        Inbox Leads
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= BASE_URL ?>/admin/users" class="admin-menu-link">
+                        Utilisateurs
+                    </a>
+                </li>
+                <li>
                     <a href="<?= BASE_URL ?>/admin/medias" class="admin-menu-link">
                         Bibliothèque Médias
                     </a>
@@ -175,6 +200,11 @@ $fontFamily = $settings['design.font-family'] ?? 'Outfit, Inter, sans-serif';
                 <li>
                     <a href="<?= BASE_URL ?>/admin/design" class="admin-menu-link">
                         Gestionnaire Design
+                    </a>
+                </li>
+                <li>
+                    <a href="<?= BASE_URL ?>/admin/settings" class="admin-menu-link">
+                        Paramètres Globaux
                     </a>
                 </li>
                 <li style="margin-top: 2rem; border-top: 1px solid var(--slate-200); padding-top: 1rem;">

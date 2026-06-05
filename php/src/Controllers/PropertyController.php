@@ -7,12 +7,39 @@ namespace Controllers;
 
 use Core\Controller;
 use Models\Property;
+use Models\Page;
+use Models\SiteSetting;
 
 class PropertyController extends Controller {
     /**
      * Render the public listing of properties with filters.
      */
     public function index(): void {
+        $pageModel = new Page();
+        $page = $pageModel->findBySlug('immobilier');
+        if (!$page) {
+            $db = \Config\Database::getConnection();
+            $db->prepare("INSERT INTO `pages` (`id`, `slug`, `title`, `sections`, `is_published`) VALUES (?, ?, ?, ?, ?)")
+               ->execute(['page-immobilier', 'immobilier', 'Immobilier', '["hero", "listings-immo"]', 1]);
+            $page = $pageModel->findBySlug('immobilier');
+        }
+
+        $settingModel = new SiteSetting();
+        $settings = $settingModel->getCachedSettings();
+
+        // Filter and get active section names
+        $rawSections = json_decode($page['sections'], true) ?: [];
+        $sections = [];
+        foreach ($rawSections as $item) {
+            if (is_string($item)) {
+                $sections[] = $item;
+            } else if (is_array($item)) {
+                if (isset($item['active']) ? (bool)$item['active'] : true) {
+                    $sections[] = $item['type'] ?? '';
+                }
+            }
+        }
+
         $propertyModel = new Property();
         
         // Capture filters from GET query string
@@ -27,9 +54,13 @@ class PropertyController extends Controller {
         $properties = $propertyModel->getActiveProperties($filters);
 
         $this->render('immobilier/index', [
+            'page' => $page,
+            'settings' => $settings,
+            'sections' => $sections,
             'properties' => $properties,
             'filters' => $filters,
-            'seoTitle' => 'Achat, Vente et Location Villa, Appartement à Abidjan — NOVA'
+            'seoTitle' => $page['seo_title'] ?? 'Achat, Vente et Location Villa, Appartement à Abidjan — NOVA',
+            'metaDescription' => $page['meta_description'] ?? null
         ], 'layouts/main');
     }
 

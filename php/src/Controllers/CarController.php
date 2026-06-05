@@ -7,12 +7,39 @@ namespace Controllers;
 
 use Core\Controller;
 use Models\Car;
+use Models\Page;
+use Models\SiteSetting;
 
 class CarController extends Controller {
     /**
      * Render the public listing of automobiles with filters.
      */
     public function index(): void {
+        $pageModel = new Page();
+        $page = $pageModel->findBySlug('automobile');
+        if (!$page) {
+            $db = \Config\Database::getConnection();
+            $db->prepare("INSERT INTO `pages` (`id`, `slug`, `title`, `sections`, `is_published`) VALUES (?, ?, ?, ?, ?)")
+               ->execute(['page-automobile', 'automobile', 'Automobile', '["hero", "listings-auto"]', 1]);
+            $page = $pageModel->findBySlug('automobile');
+        }
+
+        $settingModel = new SiteSetting();
+        $settings = $settingModel->getCachedSettings();
+
+        // Filter and get active section names
+        $rawSections = json_decode($page['sections'], true) ?: [];
+        $sections = [];
+        foreach ($rawSections as $item) {
+            if (is_string($item)) {
+                $sections[] = $item;
+            } else if (is_array($item)) {
+                if (isset($item['active']) ? (bool)$item['active'] : true) {
+                    $sections[] = $item['type'] ?? '';
+                }
+            }
+        }
+
         $carModel = new Car();
         
         // Capture filters from GET query string
@@ -27,9 +54,13 @@ class CarController extends Controller {
         $cars = $carModel->getActiveCars($filters);
 
         $this->render('automobile/index', [
+            'page' => $page,
+            'settings' => $settings,
+            'sections' => $sections,
             'cars' => $cars,
             'filters' => $filters,
-            'seoTitle' => 'Achat et Location Voiture à Abidjan — NOVA'
+            'seoTitle' => $page['seo_title'] ?? 'Achat et Location Voiture à Abidjan — NOVA',
+            'metaDescription' => $page['meta_description'] ?? null
         ], 'layouts/main');
     }
 

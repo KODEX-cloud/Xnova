@@ -8,19 +8,50 @@ namespace Controllers;
 use Core\Controller;
 use Core\Session;
 use Models\ContactMessage;
+use Models\Page;
+use Models\SiteSetting;
 
 class ContactController extends Controller {
     /**
      * Display the public contact form page.
      */
     public function index(): void {
+        $pageModel = new Page();
+        $page = $pageModel->findBySlug('contact');
+        if (!$page) {
+            $db = \Config\Database::getConnection();
+            $db->prepare("INSERT INTO `pages` (`id`, `slug`, `title`, `sections`, `is_published`) VALUES (?, ?, ?, ?, ?)")
+               ->execute(['page-contact', 'contact', 'Contact', '["hero", "contact-form"]', 1]);
+            $page = $pageModel->findBySlug('contact');
+        }
+
+        $settingModel = new SiteSetting();
+        $settings = $settingModel->getCachedSettings();
+
+        // Filter and get active section names
+        $rawSections = json_decode($page['sections'], true) ?: [];
+        $sections = [];
+        foreach ($rawSections as $item) {
+            if (is_string($item)) {
+                $sections[] = $item;
+            } else if (is_array($item)) {
+                if (isset($item['active']) ? (bool)$item['active'] : true) {
+                    $sections[] = $item['type'] ?? '';
+                }
+            }
+        }
+
         $csrfToken = Session::generateCsrfToken();
         
         $this->render('contact/index', [
+            'page' => $page,
+            'settings' => $settings,
+            'sections' => $sections,
             'csrfToken' => $csrfToken,
             'success' => Session::get('contact_success'),
             'error' => Session::get('contact_error'),
-            'seoTitle' => 'Contactez-nous — NOVA Marketplace'
+            'seoTitle' => $page['seo_title'] ?? 'Contactez-nous — NOVA Marketplace',
+            'metaDescription' => $page['meta_description'] ?? null
         ], 'layouts/main');
 
         // Clear session messages

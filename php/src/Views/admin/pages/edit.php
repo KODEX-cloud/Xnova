@@ -107,19 +107,109 @@
 
             <!-- Page Sections Layout Structure Builder -->
             <div class="admin-card">
-                <h2 class="admin-card-title">Structure de la page</h2>
-                <p style="color: var(--slate-500); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1rem;">
-                    Ordonnez les blocs constituant la page. Les blocs sont définis sous forme de tableau JSON.
+                <h2 class="admin-card-title">Structure de la page (Page Builder)</h2>
+                <p style="color: var(--slate-500); font-size: 0.8rem; margin-top: -1rem; margin-bottom: 1.5rem;">
+                    Configurez et organisez l'ordre des sections de votre page.
                 </p>
 
-                <div class="form-group">
-                    <label class="form-label" for="sections">Blocs (JSON Array)</label>
-                    <textarea id="sections" name="sections" class="form-control" rows="6" style="font-family: monospace; font-size: 0.85rem;"><?= htmlspecialchars($page['sections']) ?></textarea>
+                <?php
+                $rawSections = json_decode($page['sections'], true) ?: [];
+                $normalizedSections = [];
+                foreach ($rawSections as $idx => $item) {
+                    if (is_string($item)) {
+                        $normalizedSections[] = [
+                            'id' => 'sec_' . $item . '_' . $idx,
+                            'type' => $item,
+                            'active' => true
+                        ];
+                    } else if (is_array($item)) {
+                        $normalizedSections[] = [
+                            'id' => $item['id'] ?? 'sec_' . ($item['type'] ?? 'unknown') . '_' . $idx,
+                            'type' => $item['type'] ?? '',
+                            'active' => isset($item['active']) ? (bool)$item['active'] : true
+                        ];
+                    }
+                }
+                ?>
+
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    <?php if (empty($normalizedSections)): ?>
+                        <div style="padding: 1.5rem; text-align: center; color: var(--slate-400); background-color: var(--slate-50); border-radius: var(--radius-md); border: 1px dashed var(--slate-300);">
+                            Aucune section active sur cette page.
+                        </div>
+                    <?php else: ?>
+                        <?php foreach ($normalizedSections as $item): ?>
+                            <div style="display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--slate-200); padding: 0.75rem 1rem; border-radius: var(--radius-md); background: white; border-left: 4px solid <?= $item['active'] ? 'var(--success)' : 'var(--slate-400)' ?>;">
+                                <div>
+                                    <strong style="text-transform: capitalize; color: var(--slate-900); font-size: 0.95rem;"><?= htmlspecialchars(str_replace('-', ' ', $item['type'])) ?></strong>
+                                    <span style="font-size: 0.7rem; color: var(--slate-400); display: block;">Type: <?= htmlspecialchars($item['type']) ?></span>
+                                </div>
+                                <div style="display: flex; gap: 0.35rem; align-items: center;">
+                                    <!-- Move Up / Down -->
+                                    <a href="<?= BASE_URL ?>/admin/pages/builder/move/<?= $page['id'] ?>/<?= $item['id'] ?>/up" title="Monter" style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px; background-color: var(--slate-100); font-weight: bold; color: var(--slate-700); font-size: 0.85rem; border: 1px solid var(--slate-200);">&uarr;</a>
+                                    <a href="<?= BASE_URL ?>/admin/pages/builder/move/<?= $page['id'] ?>/<?= $item['id'] ?>/down" title="Descendre" style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px; background-color: var(--slate-100); font-weight: bold; color: var(--slate-700); font-size: 0.85rem; border: 1px solid var(--slate-200);">&darr;</a>
+                                    
+                                    <!-- Toggle Active -->
+                                    <a href="<?= BASE_URL ?>/admin/pages/builder/toggle/<?= $page['id'] ?>/<?= $item['id'] ?>" style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px; background-color: <?= $item['active'] ? 'rgba(16, 185, 129, 0.1)' : 'var(--slate-200)' ?>; font-size: 0.75rem; font-weight: bold; color: <?= $item['active'] ? 'var(--success)' : 'var(--slate-600)' ?>; border: 1px solid <?= $item['active'] ? 'rgba(16, 185, 129, 0.2)' : 'var(--slate-300)' ?>;">
+                                        <?= $item['active'] ? 'Actif' : 'Inactif' ?>
+                                    </a>
+
+                                    <!-- Delete -->
+                                    <a href="<?= BASE_URL ?>/admin/pages/builder/delete/<?= $page['id'] ?>/<?= $item['id'] ?>" onclick="return confirm('Retirer cette section ?');" title="Supprimer" style="padding: 0.25rem 0.5rem; text-decoration: none; border-radius: 4px; background-color: rgba(239, 68, 68, 0.1); color: var(--danger); font-size: 0.85rem; font-weight: bold; border: 1px solid rgba(239, 68, 68, 0.15);">&times;</a>
+                                </div>
+                            </div>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
                 </div>
-                <span style="font-size: 0.7rem; color: var(--slate-400); display: block; margin-top: -0.5rem;">
-                    Exemple: <code style="background-color: var(--slate-100); padding: 0.1rem 0.25rem;">["hero", "stats", "cta"]</code>
-                </span>
+
+                <!-- Add Section dropdown -->
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px dashed var(--slate-200);">
+                    <div style="display: flex; gap: 0.5rem;">
+                        <select id="new-section-select" class="form-control" style="padding: 0.5rem; font-size: 0.9rem;">
+                            <option value="">-- Ajouter une section --</option>
+                            <option value="hero">Bannière Hero</option>
+                            <option value="quick-categories">Catégories Rapides</option>
+                            <option value="featured-showcase">Annonces Vedettes</option>
+                            <option value="stats">Statistiques</option>
+                            <option value="testimonials">Témoignages</option>
+                            <option value="why-nova">Pourquoi NOVA</option>
+                            <option value="cta">Appel à l'action (CTA)</option>
+                            <option value="blog">Derniers Articles</option>
+                            <option value="contact">Formulaire Contact</option>
+                        </select>
+                        <button type="button" onclick="addPageSection()" class="btn-submit" style="padding: 0.5rem 1rem; font-size: 0.9rem; white-space: nowrap;">Ajouter</button>
+                    </div>
+                </div>
             </div>
+            
+            <script>
+            function addPageSection() {
+                const type = document.getElementById('new-section-select').value;
+                if (!type) {
+                    alert('Veuillez sélectionner un type de section.');
+                    return;
+                }
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '<?= BASE_URL ?>/admin/pages/builder/add/<?= $page['id'] ?>';
+                
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = 'csrf_token';
+                csrfInput.value = '<?= $csrfToken ?>';
+                
+                const typeInput = document.createElement('input');
+                typeInput.type = 'hidden';
+                typeInput.name = 'type';
+                typeInput.value = type;
+                
+                form.appendChild(csrfInput);
+                form.appendChild(typeInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+            </script>
+
             
         </div>
     </div>
