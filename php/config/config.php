@@ -9,6 +9,28 @@ define('APP_PATH', ROOT_PATH . '/src');
 define('VIEW_PATH', APP_PATH . '/Views');
 define('UPLOAD_DIR', ROOT_PATH . '/public/uploads');
 
+// Load local .env file if present
+$envFile = ROOT_PATH . '/.env';
+if (file_exists($envFile)) {
+    $lines = file($envFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (empty($line) || strpos($line, '#') === 0) continue;
+        if (strpos($line, '=') !== false) {
+            list($name, $value) = explode('=', $line, 2);
+            $name = trim($name);
+            $value = trim($value);
+            // Remove wrapping quotes if present
+            $value = trim($value, '"\'');
+            if (getenv($name) === false) {
+                putenv("{$name}={$value}");
+                $_ENV[$name] = $value;
+                $_SERVER[$name] = $value;
+            }
+        }
+    }
+}
+
 // Auto-detect Base URL for dynamic environments
 $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) ? "https://" : "http://";
 $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
