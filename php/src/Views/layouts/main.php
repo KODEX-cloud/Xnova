@@ -110,7 +110,7 @@ $contactEmail = $settings['global.contact-email'] ?? 'contact@nova.ci';
             <div class="footer-grid">
                 <div>
                     <div class="footer-logo">NOVA</div>
-                    <p>La marketplace premium double-secteur de référence à Abidjan pour l'automobile et l'immobilier.</p>
+                    <p><?= htmlspecialchars($settings['global.site-description'] ?? 'La marketplace premium double-secteur de référence à Abidjan pour l\'automobile et l\'immobilier.') ?></p>
                 </div>
                 <div>
                     <div class="footer-title">Navigation</div>
@@ -129,7 +129,7 @@ $contactEmail = $settings['global.contact-email'] ?? 'contact@nova.ci';
                     <ul class="footer-links">
                         <li>Email: <?= htmlspecialchars($contactEmail) ?></li>
                         <li>WhatsApp: <?= htmlspecialchars($whatsappNumber) ?></li>
-                        <li>Abidjan, Côte d'Ivoire</li>
+                        <li>Adresse: <?= htmlspecialchars($settings['global.contact-address'] ?? 'Abidjan, Côte d\'Ivoire') ?></li>
                     </ul>
                 </div>
             </div>
