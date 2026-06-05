@@ -1,334 +1,129 @@
-# Guide de Déploiement Professionnel — NOVA
+# Guide de Déploiement Hostinger — NOVA Marketplace (PHP Native)
 
-Ce document décrit les procédures standards pour le déploiement, la gestion, la sauvegarde et la restauration de la plateforme **NOVA Marketplace** (Next.js 15 + Prisma + PostgreSQL/Supabase) en utilisant un workflow robuste s'appuyant sur **GitHub** et **Hostinger**.
-
----
-
-## 1. Architecture du Workflow CI/CD
-
-Le déploiement de NOVA repose sur un pipeline moderne où GitHub sert de source unique de vérité. Toute modification de code doit être validée localement, commise, poussée sur GitHub, puis déployée automatiquement ou manuellement sur l'hébergement Hostinger.
-
-```mermaid
-graph TD
-    A[Développement Local] -->|1. Validation & Test| B(Git Commit)
-    B -->|2. Git Push| C[Dépôt GitHub : KODEX-cloud/Xnova]
-    C -->|3. Auto-Trigger / Pull| D[Hébergement Hostinger]
-    D -->|4. Build & Install| E[Prisma Client Generation]
-    E -->|5. Production Build| F[Next.js App Server running]
-    F -->|6. Production Site| G(nova-ci.com)
-```
+Ce guide détaille la compatibilité technique, les prérequis, la structure et le workflow d'automatisation professionnelle pour déployer la version PHP Native de **NOVA** sur un hébergement Hostinger.
 
 ---
 
-## 2. Étape 1 : Audit et Sécurité du Dépôt Git
+## 1. Prérequis Techniques
 
-### 2.1 Fichiers Ignorés (Sécurité Absolue)
-Pour éviter les fuites d'informations sensibles (clés d'API, bases de données locales, variables de session), le fichier `.gitignore` a été audité et configuré de manière stricte.
+### A. Version PHP
+*   **Recommandé** : **PHP 8.2** ou **PHP 8.3** (validé et testé en local).
+*   **Minimum** : PHP 8.1.
 
-Les éléments suivants **ne doivent jamais** être poussés sur GitHub :
-*   `.env` et tous les fichiers `.env*.local` (Contiennent les mots de passe de production et les clés NextAuth)
-*   `node_modules/` (Dépendances Node installées à la volée sur le serveur)
-*   `.next/` et `out/` (Fichiers de build générés localement)
-*   `prisma/*.db` et `prisma/*.db-journal` (Bases de données SQLite locales de développement)
-*   `public/uploads/` (Images et médias envoyés par les utilisateurs lors de l'utilisation du site)
-*   `.vercel/` et dossiers temporaires d'éditeurs (`.idea/`, `.vscode/`, `.DS_Store`)
+### B. Extensions PHP Requises
+Assurez-vous que les extensions suivantes sont cochées dans le menu **Sélecteur de version PHP** de votre hPanel Hostinger :
+1.  `pdo` & `pdo_mysql` : Connexion et persistance base de données.
+2.  `fileinfo` : Validation stricte des types MIME côté serveur pour la bibliothèque de médias.
+3.  `mbstring` : Support du codage des caractères UTF-8.
+4.  `openssl` : Chiffrement et connexions sécurisées.
+5.  `json` : Encodage et décodage des sections du Page Builder et images stockées.
 
-> [!WARNING]
-> Si une clé API ou un fichier `.env` est poussé par erreur sur GitHub, la clé doit être immédiatement révoquée et recréée, et le fichier supprimé de l'historique Git en utilisant `git filter-repo` ou `bfg-repo-cleaner`.
+### C. Taille du Projet
+*   **Volume total du code** : **~442 Ko** (hors médias téléversés).
+*   Cette légèreté extrême garantit des temps de transfert instantanés et une consommation de ressources minimale.
 
 ---
 
-## 3. Étape 2 : Workflow Quotidien de Développement
+## 2. Variables d'Environnement (.env)
 
-Pour assurer la stabilité et éviter tout conflit de code, appliquez rigoureusement ce workflow à chaque modification :
+Créez un fichier `.env` à la racine de votre répertoire `/php/` sur Hostinger. Il sera automatiquement lu par le chargeur de configuration :
 
-```bash
-# 1. Vérifier le statut local et s'assurer que la branche est 'main'
-git status
+```env
+# ── Configuration de la Base de Données
+DB_HOST="127.0.0.1"      # Généralement localhost ou l'IP fournie par Hostinger
+DB_PORT="3306"
+DB_NAME="u123456789_nova_db" # Votre nom de base MySQL Hostinger
+DB_USER="u123456789_root"    # Votre utilisateur MySQL Hostinger
+DB_PASS="VotreMotDePasseSecurise"
 
-# 2. Récupérer les dernières mises à jour du dépôt distant
-git pull origin main
-
-# 3. Effectuer vos modifications de code localement
-
-# 4. Ajouter les fichiers modifiés à l'index Git
-git add .
-
-# 5. Créer un commit explicite décrivant vos changements
-git commit -m "feat/style: description claire des modifications"
-
-# 6. Envoyer les modifications sur GitHub
-git push origin main
+# ── Mode Débogage
+APP_DEBUG="false"        # Mettre à true uniquement pour le développement
 ```
 
 ---
 
-## 4. Étape 3 : Déploiement sur Hostinger
+## 3. Base de Données MySQL (Importation)
 
-Selon votre abonnement Hostinger (Hébergement Web Mutualisé / Cloud vs. VPS Dédié), choisissez l'une des deux méthodes professionnelles ci-dessous.
-
----
-
-### METHODE A : Hébergement Hostinger Node.js (hPanel Cloud/Business)
-
-Si votre formule Hostinger inclut l'option **Application Web Node.js** dans le hPanel :
-
-#### 1. Configuration Initiale dans hPanel
-1. Connectez-vous à votre **hPanel Hostinger**.
-2. Allez dans **Sites web** > **Ajouter un site web** ou sélectionnez **nova-ci.com**.
-3. Choisissez **Application Web Node.js** (ou allez dans l'onglet **Avancé** > **Node.js**).
-4. Cliquez sur **Créer une application**.
-
-#### 2. Connexion Git / GitHub
-1. Sélectionnez **Importer un dépôt Git**.
-2. Connectez et autorisez votre compte GitHub possédant l'accès à `KODEX-cloud/Xnova`.
-3. Sélectionnez le dépôt `KODEX-cloud/Xnova` et la branche `main`.
-4. Le hPanel configurera automatiquement un webhook de déploiement automatique : **chaque `git push` sur la branche `main` déclenchera un nouveau build**.
-
-#### 3. Configuration des Variables d'Environnement
-Dans la section de configuration de l'application Node.js sur Hostinger, vous devez renseigner manuellement toutes les clés qui se trouvent dans votre `.env.local` pour la production. 
-
-Ajoutez les variables suivantes :
-*   `DATABASE_URL` : L'URL de connexion de votre base de données PostgreSQL de production (ex: Supabase).
-*   `NEXTAUTH_URL` : `https://nova-ci.com`
-*   `NEXTAUTH_SECRET` : Votre clé secrète générée pour chiffrer les sessions JWT.
-*   `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` : (Si applicable) Clé Cloudinary.
-*   `CLOUDINARY_API_KEY` & `CLOUDINARY_API_SECRET` : (Si applicable) Clés API.
-
-#### 4. Build et Lancement
-Configurez les commandes de cycle de vie dans Hostinger :
-*   **Version de Node** : Choisissez `20.x` ou `18.x`.
-*   **Commande d'installation** : `npm install`
-*   **Commande de build** : `npm run build` (Exécute `prisma generate && next build` automatiquement).
-*   **Point d'entrée / Commande de démarrage** : `npm run start` (Exécute `next start`).
-
-Cliquez sur **Déployer**. L'application installe ses dépendances, compile le code Next.js et démarre le serveur.
+1.  Connectez-vous à votre **hPanel Hostinger** &rarr; **Bases de données MySQL**.
+2.  Créez une nouvelle base de données et notez les identifiants pour votre fichier `.env`.
+3.  Ouvrez **phpMyAdmin**.
+4.  Sélectionnez votre base de données et cliquez sur l'onglet **Importer**.
+5.  Importez en premier le fichier structurel : `php/database/schema.sql`.
+6.  Importez ensuite le fichier de données initiales : `php/database/seed.sql`.
 
 ---
 
-### METHODE B : Serveur VPS Hostinger avec PM2 (Recommandé pour la Production)
+## 4. Structure des Répertoires Hostinger
 
-Le déploiement sur un **VPS Hostinger** (Ubuntu Server) offre un contrôle total de la mémoire, de la stabilité et des performances de Next.js 15.
+Sur Hostinger, le dossier racine public est généralement `public_html`.
+Pour une sécurité maximale (empêcher l'accès direct aux fichiers sources `/src`, `/config`, etc.), configurez votre hébergement pour que le sous-dossier public pointe vers `php/public`.
 
-#### 1. Configuration Initiale du VPS
-Connectez-vous à votre VPS Hostinger en SSH :
-```bash
-ssh root@<IP_VOTRE_VPS>
+### Structure Cible sur le Serveur :
 ```
-
-Installez Node.js, Git, PM2 et Nginx :
-```bash
-# Mettre à jour le système
-sudo apt update && sudo apt upgrade -y
-
-# Installez Node.js (via NodeSource LTS)
-curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-sudo apt-get install -y nodejs
-
-# Installer PM2 globalement
-sudo npm install pm2 -g
-
-# Installer Nginx
-sudo apt install nginx -y
-```
-
-#### 2. Cloner le Projet & Configurer les Variables
-Accédez au dossier de déploiement :
-```bash
-cd /var/www
-git clone https://github.com/KODEX-cloud/Xnova.git nova
-cd nova
-```
-
-Créez le fichier `.env.local` avec les configurations réelles de production :
-```bash
-nano .env.local
-```
-*(Collez vos variables d'environnement de production, puis sauvegardez avec `Ctrl+O` et quittez avec `Ctrl+X`)*.
-
-#### 3. Installer les Dépendances, Générer Prisma & Builder
-```bash
-# Installer les dépendances de production
-npm install
-
-# Générer le client Prisma pour PostgreSQL
-npx prisma generate
-
-# Compiler l'application Next.js
-npm run build
-```
-
-#### 4. Lancer avec PM2 (Process Manager)
-PM2 assure que l'application Next.js reste active en arrière-plan et redémarre automatiquement en cas de crash du serveur.
-```bash
-# Démarrer Next.js avec PM2
-pm2 start npm --name "nova-app" -- start
-
-# Configurer le démarrage automatique de PM2 au boot du VPS
-pm2 startup systemd
-pm2 save
-```
-
-#### 5. Configuration de Nginx en Reverse Proxy
-Configurez Nginx pour rediriger le trafic du port 80/443 vers le port local de l'application Next.js (port 3000 par défaut).
-```bash
-sudo nano /etc/nginx/sites-available/nova
-```
-
-Collez la configuration suivante :
-```nginx
-server {
-    listen 80;
-    server_name nova-ci.com www.nova-ci.com;
-
-    location / {
-        proxy_pass http://localhost:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection 'upgrade';
-        proxy_set_header Host $host;
-        proxy_cache_bypass $http_upgrade;
-    }
-}
-```
-
-Activez le site et redémarrez Nginx :
-```bash
-sudo ln -s /etc/nginx/sites-available/nova /etc/nginx/sites-enabled/
-sudo nginx -t
-sudo systemctl restart nginx
-```
-
-> [!TIP]
-> Installez Let's Encrypt pour sécuriser gratuitement votre site en HTTPS :
-> ```bash
-> sudo apt install certbot python3-certbot-nginx -y
-> sudo certbot --nginx -d nova-ci.com -d www.nova-ci.com
-> ```
-
-#### 6. CI/CD Automatique avec GitHub Actions
-Pour déployer à chaque `git push` sur GitHub, créez le fichier `.github/workflows/deploy.yml` localement :
-```yaml
-name: Deploy to Hostinger VPS
-
-on:
-  push:
-    branches:
-      - main
-
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Deploy via SSH
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VPS_HOST }}
-          username: ${{ secrets.VPS_USER }}
-          key: ${{ secrets.VPS_SSH_KEY }}
-          script: |
-            cd /var/www/nova
-            git pull origin main
-            npm install
-            npx prisma generate
-            npm run build
-            pm2 restart nova-app
+public_html/ (ou racine du site)
+├── php/
+│   ├── .env                 # Variables d'environnement de production
+│   ├── config/              # Fichiers de configuration
+│   ├── src/                 # Contrôleurs, Modèles et Vues (Protégés)
+│   ├── public/              # Dossier pointé par le serveur web
+│   │   ├── index.php        # Front Controller d'entrée unique
+│   │   ├── .htaccess        # Réécriture d'URL
+│   │   ├── assets/          # Styles CSS, images statiques et JS
+│   │   └── uploads/         # Répertoire d'images physiques de la bibliothèque média
 ```
 
 ---
 
-## 5. Procédures de Sauvegarde (Backup)
+## 5. Workflow de Déploiement Automatisé (Git & Webhook)
 
-La sauvegarde de NOVA comporte deux parties : la Base de Données (Supabase/PostgreSQL) et les Fichiers Médias locaux.
+Pour éviter d'utiliser des clients FTP manuels lents, configurez un déploiement continu à l'aide de l'outil **Git** de Hostinger.
 
-### 5.1 Sauvegarde de la Base de Données PostgreSQL
-Si vous utilisez Supabase (recommandé), les sauvegardes quotidiennes sont automatiques. Pour effectuer une sauvegarde manuelle à tout moment :
-
-```bash
-# Exporter la structure et les données depuis votre machine locale ou VPS
-pg_dump -h db.yoursupabasehost.supabase.co -U postgres -d postgres > backup_nova_$(date +%F).sql
+### Séquence de déploiement professionnel :
+```
+Développement Local (Git local)
+        ↓
+   Commit local
+        ↓
+  Push sur GitHub (main)
+        ↓  [Déclencheur Webhook automatique]
+Hostinger (git pull automatique)
 ```
 
-### 5.2 Sauvegarde des Fichiers Uploadés (Images)
-Si les images des annonces sont stockées localement dans `public/uploads/` :
+### Étape 1 : Configuration du dépôt Git dans Hostinger
+1.  Connectez-vous au hPanel Hostinger &rarr; section **Avancé** &rarr; **Git**.
+2.  Dans **Créer un nouveau dépôt**, renseignez :
+    *   **Repository URL** : `https://github.com/KODEX-cloud/Xnova.git` (ou votre clé SSH si dépôt privé).
+    *   **Branche** : `main`.
+    *   **Dossier d'installation** : `public_html` (ou la racine du sous-domaine).
+3.  Cliquez sur **Créer**.
 
-```bash
-# Sur le VPS, compresser le répertoire public/uploads dans un dossier sécurisé
-tar -czvf /var/backups/nova-uploads-$(date +%F).tar.gz /var/www/nova/public/uploads
-```
+### Étape 2 : Configuration du Déploiement Automatique (Webhook)
+1.  Une fois le dépôt créé dans Hostinger, repérez la ligne du dépôt dans le tableau.
+2.  Cliquez sur **Auto-Déploiement** puis copiez l'**URL du Webhook** générée par Hostinger.
+3.  Allez sur votre dépôt **GitHub** &rarr; **Settings** &rarr; **Webhooks**.
+4.  Cliquez sur **Add webhook**.
+5.  Renseignez :
+    *   **Payload URL** : *Collez l'URL copiée de Hostinger*.
+    *   **Content type** : `application/json`.
+    *   **Which events...** : Just the `push` event.
+6.  Cliquez sur **Add webhook**.
+
+Désormais, à chaque `git push origin main` depuis votre terminal de développement, Hostinger récupère automatiquement les fichiers et met le site à jour en moins de 3 secondes !
 
 ---
 
-## 6. Procédures de Retour Arrière (Rollback)
+## 6. Procédure de Sauvegarde (Backups)
 
-En cas d'erreur critique après un déploiement, vous devez restaurer immédiatement la dernière version stable de l'application.
+### A. Sauvegarde des Fichiers
+Hostinger génère des sauvegardes quotidiennes ou hebdomadaires de vos fichiers. Vous pouvez également lancer un backup manuel :
+1.  hPanel &rarr; **Fichiers** &rarr; **Sauvegardes**.
+2.  Sélectionnez **Sauvegardes de fichiers** &rarr; Choisissez la date et lancez le téléchargement ou la restauration.
 
-### 6.1 Rollback du Code (Git)
-1. Identifiez le hash du dernier commit stable dans l'historique :
-   ```bash
-   git log --oneline
-   ```
-2. Forcez la branche locale/distante sur ce commit stable (ex: commit `e1ce79c`) :
-   ```bash
-   # Sur le serveur de production / VPS
-   git reset --hard e1ce79c
-   
-   # Regénérer et recompiler le code stable
-   npx prisma generate
-   npm run build
-   
-   # Redémarrer l'application
-   pm2 restart nova-app
-   ```
-
-### 6.2 Restauration de la Base de Données
-Si une migration de base de données a corrompu vos données, importez le dernier fichier sql sauvegardé :
-
-```bash
-psql -h db.yoursupabasehost.supabase.co -U postgres -d postgres -f backup_nova_YYYY-MM-DD.sql
-```
-
----
-
-## 7. Vérifications de Routine Après Déploiement
-
-Après tout déploiement ou retour arrière, effectuez ces tests rapides :
-1. **Accès Public** : Ouvrez `https://nova-ci.com` et naviguez sur les pages (Accueil, Automobile, Immobilier, Blog).
-2. **Statut API & DB** : Connectez-vous au dashboard utilisateur ou admin pour vérifier les sessions NextAuth et la bonne récupération des données en base.
-3. **Upload d'Image** : Créez une annonce de test avec une image et validez l'intégration dans la bibliothèque de médias.
-4. **Vérification des Logs** :
-   *   Sur le VPS : `pm2 logs nova-app`
-   *   Dans Nginx : `tail -f /var/log/nginx/error.log`
-
----
-
-## 8. Déploiement de la Version PHP Native (CMS-First) sur Hostinger
-
-La version PHP Native de NOVA a été conçue pour être déployée sur n'importe quelle formule d'hébergement Hostinger (Mutualisé, Cloud, ou VPS) avec PHP 8.3 et MySQL.
-
-### 8.1 Préparation de la Base de Données
-1. Connectez-vous à votre **hPanel Hostinger**.
-2. Allez dans **Bases de données** > **Gestion des bases de données MySQL**.
-3. Créez une nouvelle base de données et notez les informations :
-   * Nom de la base de données
-   * Identifiant de l'utilisateur
-   * Mot de passe
-4. Cliquez sur **Entrer dans phpMyAdmin**.
-5. Importez le schéma de table en chargeant le fichier [schema.sql](file:///c:/Users/PC/AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/Nova/php/database/schema.sql).
-6. Importez le jeu de données initial en chargeant le fichier [seed.sql](file:///c:/Users/PC/AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/Nova/php/database/seed.sql).
-
-### 8.2 Déploiement des Fichiers
-1. Dans le **Gestionnaire de fichiers** de Hostinger (ou par FTP), accédez au répertoire de votre site (généralement `public_html`).
-2. Copiez l'ensemble du contenu du sous-répertoire `/php/` de votre dépôt Git directement dans le dossier racine de votre nom de domaine sur Hostinger.
-3. Assurez-vous que le dossier `public` de PHP est défini comme le dossier racine web (Document Root), ou utilisez le fichier `.htaccess` fourni pour rediriger le trafic transparent.
-
-### 8.3 Configuration du Site
-Ouvrez le fichier `config/config.php` sur le serveur et renseignez les identifiants de la base de données de production :
-```php
-define('DB_HOST', 'localhost'); // Ou l'hôte MySQL Hostinger
-define('DB_USER', 'u123456789_nova');
-define('DB_PASS', 'VotreMotDePasseBaseDeDonnees');
-define('DB_NAME', 'u123456789_novadb');
-```
-
-L'application PHP Native est immédiatement fonctionnelle. Pour accéder à l'administration, rendez-vous sur `https://votre-domaine.com/auth/login` (Identifiants par défaut : `admin@nova.ci` / `admin123`).
+### B. Sauvegarde SQL via CLI (Cron job automatique)
+Pour automatiser la sauvegarde de votre base de données MySQL tous les soirs à minuit, ajoutez un **Cron Job** dans Hostinger :
+1.  hPanel &rarr; **Avancé** &rarr; **Tâches Cron**.
+2.  Ajoutez la commande suivante (adaptez avec vos identifiants) :
+    ```bash
+    mysqldump -u u123456789_root -pVotreMotDePasse u123456789_nova_db > /home/u123456789/backups/db_backup_$(date +\%F).sql
+    ```
+3.  Planifiez à **Une fois par jour** (`0 0 * * *`).
