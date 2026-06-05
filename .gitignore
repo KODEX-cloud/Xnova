@@ -13,6 +13,8 @@ out/
 .env.production.local
 .env*.local
 .env.production
+php/.env
+php/.env.local
 
 # Database files
 prisma/*.db
@@ -21,7 +23,7 @@ prisma/*.db-journal
 prisma/**/*.db-journal
 
 # Uploads (user-generated content)
-public/uploads/
+php/public/uploads/
 
 # OS / Editor
 .DS_Store
