@@ -1,90 +1,160 @@
-# Stratégie et Cahier de Recette de Préproduction — NOVA
+# Guide et Cahier de Recette de Préproduction Hostinger — NOVA
 
-Ce document présente l'audit de compatibilité de l'hébergement Vercel et détaille la mise en place d'un environnement de préproduction (staging) identique à la production sur un sous-domaine Hostinger.
-
----
-
-## 1. Audit de Compatibilité Vercel pour PHP Native
-
-Bien qu'il existe des runtimes communautaires (`vercel-php`) permettant d'exécuter du PHP sur Vercel, cette solution est **fortement déconseillée** pour un CMS relationnel d'entreprise comme NOVA pour les raisons suivantes :
-
-1.  **Système de fichiers éphémère (Stateless)** :
-    *   Vercel fonctionne sur une architecture Serverless (AWS Lambda). Le disque dur des fonctions est temporaire et effacé lors du prochain démarrage à froid (Cold Start) ou à chaque déploiement.
-    *   *Conséquence* : Toutes les images téléversées par les utilisateurs dans `/public/uploads/` via la Bibliothèque de Médias seraient perdues régulièrement.
-2.  **Absence de base de données MySQL locale** :
-    *   Vercel ne peut pas héberger de base de données MySQL relationnelle classique. Il faudrait utiliser un serveur MySQL externe (type AWS RDS, Supabase, PlanetScale) ce qui ajouterait de la latence réseau et des coûts de facturation.
-3.  **Gestion de la réécriture d'URL (.htaccess)** :
-    *   Vercel utilise son propre moteur de routage configuré via un fichier JSON (`vercel.json`) et ne supporte pas nativement les fichiers `.htaccess` d'Apache.
-4.  **Temps de réponse (Cold Starts)** :
-    *   Le temps de réveil des fonctions serverless PHP peut introduire une latence de 1 à 3 secondes lors des premières requêtes, dégradant l'expérience premium fluide voulue pour NOVA.
-
-### Meilleure alternative de Préproduction : Le Sous-domaine Hostinger
-Pour assurer une parité environnementale parfaite, la préproduction doit être hébergée sur un sous-domaine de test sur votre hébergement Hostinger (ex: `staging.nova-ci.com` ou `dev.nova-ci.com`).
-*   **Avantages** : Environnement serveur 100% identique (PHP 8.2, Apache, MySQL natif), persistance des médias sur le disque, et coût nul.
+Ce guide de référence décrit la procédure pas-à-pas pour déployer et configurer la version PHP Native CMS de NOVA sur l'environnement de préproduction `staging.nova-ci.com` sur votre hébergement Hostinger.
 
 ---
 
-## 2. Architecture du Workflow Git / GitHub / Staging
+## 1. Checklist Technique Hostinger (Staging)
 
-Le workflow de déploiement continu utilise deux branches Git distinctes pour séparer le développement, la recette et la production :
+Avant d'initier le déploiement, connectez-vous au hPanel Hostinger et validez les points suivants dans la section **Avancé &rarr; Configuration PHP** :
 
+- [ ] **Version PHP** : Sélectionner **PHP 8.2** (ou PHP 8.3).
+- [ ] **Extensions PHP requises** :
+  - `pdo_mysql` (liaison MySQL)
+  - `fileinfo` (validation stricte du type MIME des uploads)
+  - `mbstring` (gestion des encodages de caractères UTF-8)
+  - `openssl` (chiffrement et sécurité)
+  - `json` (lecture et écriture des sections CMS au format JSON)
+- [ ] **Certificat SSL** : Installer SSL gratuit sur le sous-domaine `staging.nova-ci.com`.
+- [ ] **Permissions de Fichiers (Chmod)** :
+  - Répertoire `/public_html/staging/php/public/uploads` : Droits d'écriture requis (**755** ou **775**).
+  - Autres fichiers PHP : Droits de lecture (**644**).
+- [ ] **Redirection Document Root** : Configurer le sous-domaine `staging.nova-ci.com` pour qu'il pointe directement vers le sous-dossier `public_html/staging/php/public` (ceci évite d'avoir à saisir `/php/public/` dans l'URL).
+
+---
+
+## 2. Fiche de Configuration de l'Infrastructure
+
+| Élément | Paramètre | Détails / Action |
+|---|---|---|
+| **Sous-domaine** | Nom d'hôte | `staging.nova-ci.com` |
+| | Dossier cible | `public_html/staging` |
+| **Git Hostinger** | URL du dépôt | `https://github.com/KODEX-cloud/Xnova.git` |
+| | Branche Git | `staging` |
+| | Dossier d'installation | `public_html/staging` |
+| **Base MySQL** | Nom de la base | ex: `u123456789_staging_db` |
+| | Utilisateur MySQL | ex: `u123456789_staging_user` |
+| | Hôte de la base | `127.0.0.1` (ou `localhost`) |
+| | Port MySQL | `3306` |
+
+---
+
+## 3. Fichier `.env` de Staging Complet
+
+Créez le fichier `.env` dans le répertoire `public_html/staging/php/.env` via le Gestionnaire de Fichiers d'Hostinger :
+
+```env
+# ── Configuration de la Base de Données Staging
+DB_HOST="127.0.0.1"
+DB_PORT="3306"
+DB_NAME="u123456789_staging_db"      # Remplacer par votre nom de base réel
+DB_USER="u123456789_staging_user"    # Remplacer par votre utilisateur réel
+DB_PASS="VotreMotDePasseBaseStaging" # Remplacer par votre mot de passe réel
+
+# ── Mode Débogage
+APP_DEBUG="true"  # Activé en préproduction pour loguer les erreurs et warning
 ```
-             [ Branche 'staging' ] ──> Push GitHub ──> Webhook Staging ──> staging.nova-ci.com
-           /
-Git Local
-           \
-             [ Branche 'main' ] ──> Push GitHub ──> Webhook Production ──> nova-ci.com (Production)
+
+> [!WARNING]
+> N'ajoutez jamais de guillemets autour du mot de passe s'il contient des caractères spéciaux, sauf s'ils sont requis par le chargeur. Le parseur PHP lit les valeurs brutes.
+
+---
+
+## 4. Procédure d'Installation Étape par Étape
+
+### Étape A : Préparation de la Base de Données
+1. Accédez à votre **hPanel Hostinger &rarr; Bases de données MySQL**.
+2. Créez la base `staging_db` et son utilisateur, puis notez les accès.
+3. Cliquez sur **phpMyAdmin** pour ouvrir la base.
+4. Cliquez sur **Importer** et sélectionnez les fichiers du projet dans l'ordre :
+   1. `php/database/schema.sql` (Structure des tables)
+   2. `php/database/seed.sql` (Données initiales d'administration)
+
+### Étape B : Configuration du Sous-domaine et SSL
+1. Dans **hPanel Hostinger &rarr; Domaines &rarr; Sous-domaines**, créez le sous-domaine `staging` pointant vers le dossier `public_html/staging`.
+2. Allez dans **Sécurité &rarr; Certificats SSL** et installez SSL pour `staging.nova-ci.com`.
+
+### Étape C : Connexion Git sur Hostinger
+1. Dans **hPanel Hostinger &rarr; Avancé &rarr; Git**.
+2. Saisissez l'URL de votre dépôt GitHub, sélectionnez la branche `staging`, et définissez le dossier d'installation sur `public_html/staging`.
+3. Cliquez sur **Créer**.
+4. Repérez le dépôt Git créé, cliquez sur **Auto-Déploiement**, et copiez l'URL de Webhook générée.
+
+### Étape D : Liaison du Webhook sur GitHub
+1. Ouvrez votre dépôt **GitHub &rarr; Settings &rarr; Webhooks &rarr; Add webhook**.
+2. Collez l'URL de Webhook copiée à l'étape précédente dans **Payload URL**.
+3. Sélectionnez le format `application/json` et l'événement `push`.
+4. Validez en cliquant sur **Add webhook**.
+
+### Étape E : Création du fichier `.env` de Staging
+1. Ouvrez le **Gestionnaire de fichiers** d'Hostinger.
+2. Naviguez vers le dossier `public_html/staging/php/`.
+3. Créez un nouveau fichier nommé `.env`.
+4. Collez le contenu de la section 3 (ci-dessus) en insérant vos accès BDD, puis enregistrez.
+
+---
+
+## 5. Commandes Git pour les Mises à Jour
+
+Voici les commandes de base pour maintenir votre staging à jour depuis votre terminal local :
+
+### A. Pousser des modifications sur le Staging
+Lorsque vous modifiez du code localement et que vous souhaitez le déployer sur `staging.nova-ci.com` :
+```bash
+# S'assurer d'être sur la branche de préproduction
+git checkout staging
+
+# Ajouter les modifications
+git add .
+
+# Enregistrer les modifications
+git commit -m "feat/fix: description des changements pour staging"
+
+# Pousser sur GitHub (déclenche le déploiement Hostinger Staging en 3 secondes)
+git push origin staging
+```
+
+### B. Fusionner le Staging validé vers la Production (main)
+Une fois que vos modifications sur `staging.nova-ci.com` sont testées et validées :
+```bash
+# Basculer sur la branche de production
+git checkout main
+
+# Fusionner les modifications de staging
+git merge staging
+
+# Pousser sur la branche principale (déclenche le déploiement nova-ci.com)
+git push origin main
+
+# Revenir sur la branche de travail staging
+git checkout staging
 ```
 
 ---
 
-## 3. Guide d'Installation de la Préproduction sur Hostinger
+## 6. Plan de Validation Post-Déploiement
 
-### Étape 1 : Création du sous-domaine de Staging
-1.  Connectez-vous au hPanel Hostinger &rarr; **Domaines &rarr; Sous-domaines**.
-2.  Créez le sous-domaine `staging` (ce qui créera le répertoire `public_html/staging`).
+Une fois le déploiement en ligne achevé, effectuez l'audit de validation suivant sur `staging.nova-ci.com` :
 
-### Étape 2 : Configuration du dépôt Git pour le Staging
-1.  Allez dans Hostinger hPanel &rarr; **Avancé &rarr; Git**.
-2.  Dans **Créer un nouveau dépôt**, renseignez :
-    *   **Repository URL** : `https://github.com/KODEX-cloud/Xnova.git`.
-    *   **Branche** : `staging` (Spécifique pour la préproduction).
-    *   **Dossier d'installation** : `public_html/staging`.
-3.  Cliquez sur **Créer**.
+### A. Validation des Pages Publiques
+Ouvrez les URLs suivantes et assurez-vous de l'absence d'erreurs PHP/MySQL :
+*   `https://staging.nova-ci.com/` (Accueil dynamique)
+*   `https://staging.nova-ci.com/automobile` (Listing automobile)
+*   `https://staging.nova-ci.com/immobilier` (Listing immobilier)
+*   `https://staging.nova-ci.com/services` (Services NOVA)
+*   `https://staging.nova-ci.com/blog` (Articles de blog)
+*   `https://staging.nova-ci.com/contact` (Formulaire de contact)
+*   `https://staging.nova-ci.com/annonces` (Tous les listings)
 
-### Étape 3 : Configuration du Webhook de Staging dans GitHub
-1.  Sur Hostinger, dans le tableau de vos dépôts Git, repérez le dépôt lié au dossier `staging`.
-2.  Cliquez sur **Auto-Déploiement** et copiez l'URL de webhook générée.
-3.  Allez sur votre dépôt **GitHub &rarr; Settings &rarr; Webhooks &rarr; Add webhook**.
-4.  Collez l'URL Hostinger du staging dans **Payload URL**, configurez en `application/json`, et validez.
+### B. Validation Fonctionnelle & CMS Admin
+Connectez-vous à l'administration via `https://staging.nova-ci.com/auth/login` (Admin : `admin@nova.ci` / `admin123`) :
+1.  **Création d'Annonces** : Publier une annonce de voiture ou de propriété en téléversant des images.
+2.  **Bibliothèque de Médias** : Vérifier que les images s'affichent correctement sous forme de grille, et tester l'upload d'un nouveau fichier.
+3.  **Édition de Pages (Page Builder)** : Modifier les sections de la page d'accueil (changer l'ordre, activer/désactiver une section) et vérifier le rendu immédiat en frontend.
+4.  **Design Manager** : Modifier une couleur de marque en back-office (ex: `design.nova-red`) et s'assurer que la feuille de style frontend s'adapte instantanément.
+5.  **SEO Manager** : Configurer la méta-description d'une page et vérifier sa présence dans le code source HTML.
 
-Désormais, tout push ou merge sur la branche `staging` déploie le code automatiquement sur `staging.nova-ci.com`.
-
-### Étape 4 : Base de Données et Fichier d'Environnement de Staging
-1.  Créez une base de données MySQL distincte dans Hostinger (ex: `u123456789_staging_db`).
-2.  Importez les schémas et données initiales (`schema.sql` et `seed.sql`).
-3.  Créez le fichier d'environnement de staging `public_html/staging/php/.env` avec les identifiants de la base de staging :
-    ```env
-    DB_HOST="127.0.0.1"
-    DB_PORT="3306"
-    DB_NAME="u123456789_staging_db"
-    DB_USER="u123456789_staging_user"
-    DB_PASS="MotDePasseBaseStaging"
-    APP_DEBUG="true"  # Activé en staging pour détecter les éventuels avertissements
-    ```
-
----
-
-## 4. Plan d'Audit & Recette de Préproduction
-
-Une fois la préproduction déployée, effectuez les vérifications suivantes :
-
-### A. Journal d'erreurs PHP (Logs)
-Vérifiez qu'aucun warning ou notice n'est généré en consultant le fichier de log de Hostinger (`error_log` accessible via le gestionnaire de fichiers à la racine du sous-domaine).
-
-### B. Validation des permissions (Chmod)
-Assurez-vous que le dossier `/php/public/uploads` possède les droits d'écriture corrects (`755` ou `775`) pour permettre le téléversement d'images par le serveur web.
-
-### C. Test de Sécurité SSL
-Activez le SSL sur le sous-domaine depuis Hostinger (via **Sécurité &rarr; Certificats SSL &rarr; Installer SSL** pour `staging.nova-ci.com`).
-Vérifiez que toutes les requêtes sont redirigées vers `https://` et qu'aucune alerte de contenu mixte (mixed content) n'apparaît dans la console du navigateur.
+### C. Vérification Technique
+- [ ] **Logs Hostinger** : Consulter le fichier `error_log` à la racine de votre dossier de staging pour vérifier qu'aucun warning PHP n'est émis.
+- [ ] **Console JS** : Ouvrir les outils de développement (F12) du navigateur et s'assurer de l'absence de ressources 404 ou d'erreurs d'exécution Javascript.
+- [ ] **Permissions d'écriture** : Tenter d'importer une image via le CMS. Si l'upload échoue, corriger les permissions du dossier `php/public/uploads` (Chmod 755 ou 775).
