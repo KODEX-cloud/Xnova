@@ -33,3 +33,8 @@ Thumbs.db
 .vscode/
 
 .vercel
+
+# Local Backups
+backup_local_nova_db.sql
+nova_production_package.zip
+

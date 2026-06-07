@@ -1,154 +1,154 @@
-# Guide de Déploiement Hostinger — NOVA Marketplace (PHP Native)
+# Guide de Déploiement et Recette de Production — NOVA (Direct Production)
 
-Ce guide détaille la compatibilité technique, les prérequis, la structure et le workflow d'automatisation professionnelle pour déployer la version PHP Native de **NOVA** sur un hébergement Hostinger.
-
----
-
-## 1. Prérequis Techniques
-
-### A. Version PHP
-*   **Recommandé** : **PHP 8.2** ou **PHP 8.3** (validé et testé en local).
-*   **Minimum** : PHP 8.1.
-
-### B. Extensions PHP Requises
-Assurez-vous que les extensions suivantes sont cochées dans le menu **Sélecteur de version PHP** de votre hPanel Hostinger :
-1.  `pdo` & `pdo_mysql` : Connexion et persistance base de données.
-2.  `fileinfo` : Validation stricte des types MIME côté serveur pour la bibliothèque de médias.
-3.  `mbstring` : Support du codage des caractères UTF-8.
-4.  `openssl` : Chiffrement et connexions sécurisées.
-5.  `json` : Encodage et décodage des sections du Page Builder et images stockées.
-
-### C. Taille du Projet
-*   **Volume total du code** : **~442 Ko** (hors médias téléversés).
-*   Cette légèreté extrême garantit des temps de transfert instantanés et une consommation de ressources minimale.
+Ce document détaille la procédure de déploiement en production directe du CMS PHP Native de NOVA sur `nova-ci.com`, la checklist de mise en ligne, et le plan de validation post-déploiement.
 
 ---
 
-## 2. Variables d'Environnement (.env)
+## 1. Checklist de Mise en Ligne Hostinger
 
-Créez un fichier `.env` à la racine de votre répertoire `/php/` sur Hostinger. Il sera automatiquement lu par le chargeur de configuration :
+Avant de lancer le déploiement sur `nova-ci.com`, connectez-vous au hPanel Hostinger et validez les prérequis suivants dans **Avancé &rarr; Configuration PHP** :
+
+- [ ] **Version PHP** : Sélectionner **PHP 8.2** (ou PHP 8.3).
+- [ ] **Extensions PHP actives** :
+  - `pdo_mysql` (liaison de la base de données)
+  - `fileinfo` (détection du type MIME réel pour la bibliothèque de médias)
+  - `mbstring` (support de l'encodage multi-octets pour UTF-8)
+  - `openssl` (sécurisation des échanges)
+  - `json` (encodage/décodage des configurations JSON)
+- [ ] **Certificat SSL** : S'assurer que le certificat SSL est actif pour `nova-ci.com`.
+- [ ] **Permissions de Fichiers (Chmod)** :
+  - Le répertoire `/public_html/php/public/uploads` doit avoir les droits d'écriture (**755** ou **775**).
+  - Tous les fichiers PHP doivent être lisibles (**644**).
+- [ ] **Redirection de Dossier (Document Root)** :
+  - Par défaut, Hostinger fait pointer le domaine sur le répertoire `/public_html`. Pour la sécurité du framework PHP MVC, configurez le Document Root de votre domaine `nova-ci.com` sur le sous-dossier `/public_html/php/public`.
+  - *Note* : Si vous ne pouvez pas rediriger le Document Root sur le hPanel, placez un fichier `.htaccess` à la racine de `/public_html` pour rediriger les requêtes de manière transparente (voir Section 4).
+
+---
+
+## 2. Configuration d'Infrastructure de Production
+
+| Élément | Paramètre | Détails / Action |
+|---|---|---|
+| **Domaine de Production** | URL | `https://nova-ci.com` |
+| **Dossier d'Installation** | Répertoire Hostinger | `public_html` |
+| **Git Hostinger** | URL du dépôt | `https://github.com/KODEX-cloud/Xnova.git` |
+| | Branche Git | `main` |
+| | Répertoire cible | `public_html` |
+| **Base MySQL de Production**| Nom de la base | ex: `u123456789_nova_db` |
+| | Utilisateur MySQL | ex: `u123456789_nova_user` |
+| | Hôte de la base | `127.0.0.1` (ou `localhost`) |
+
+---
+
+## 3. Fichier `.env` de Production
+
+Créez le fichier `.env` dans le répertoire `public_html/php/.env` de production :
 
 ```env
-# ── Configuration de la Base de Données
-DB_HOST="127.0.0.1"      # Généralement localhost ou l'IP fournie par Hostinger
+# ── Configuration de la Base de Données de Production
+DB_HOST="127.0.0.1"
 DB_PORT="3306"
-DB_NAME="u123456789_nova_db" # Votre nom de base MySQL Hostinger
-DB_USER="u123456789_root"    # Votre utilisateur MySQL Hostinger
-DB_PASS="VotreMotDePasseSecurise"
+DB_NAME="u123456789_nova_db"       # Remplacer par le nom réel de votre BDD de production
+DB_USER="u123456789_nova_user"     # Remplacer par l'utilisateur de votre BDD
+DB_PASS="VotreMotDePasseProductionSecurise" # Remplacer par le mot de passe réel
 
-# ── Mode Débogage
-APP_DEBUG="false"        # Mettre à true uniquement pour le développement
+# ── Mode d'exécution
+APP_DEBUG="false"                 # Doit être à false pour bloquer l'affichage des erreurs aux visiteurs
 ```
 
 ---
 
-## 3. Base de Données MySQL (Importation)
+## 4. Procédure d'Installation Pas-à-Pas (Hostinger)
 
-1.  Connectez-vous à votre **hPanel Hostinger** &rarr; **Bases de données MySQL**.
-2.  Créez une nouvelle base de données et notez les identifiants pour votre fichier `.env`.
-3.  Ouvrez **phpMyAdmin**.
-4.  Sélectionnez votre base de données et cliquez sur l'onglet **Importer**.
-5.  Importez en premier le fichier structurel : `php/database/schema.sql`.
-6.  Importez ensuite le fichier de données initiales : `php/database/seed.sql`.
+### Étape 1 : Création et Importation de la Base de Données
+1. Accédez à votre **hPanel Hostinger &rarr; Bases de données MySQL**.
+2. Créez la base de données de production et son utilisateur, puis notez les mots de passe.
+3. Ouvrez **phpMyAdmin** pour cette base.
+4. Cliquez sur **Importer** et sélectionnez les fichiers du projet dans cet ordre :
+   1. `php/database/schema.sql` (Structure des 15 tables)
+   2. `php/database/seed.sql` (Données initiales et accès d'administration)
 
----
+### Étape 2 : Déploiement du Code via Git Hostinger
+1. S'assurer que le code local nettoyé est bien poussé sur GitHub sur la branche `main`.
+2. Dans **hPanel Hostinger &rarr; Avancé &rarr; Git**, configurez :
+   * **Repository URL** : `https://github.com/KODEX-cloud/Xnova.git`
+   * **Branche** : `main`
+   * **Dossier d'installation** : `public_html`
+3. Cliquez sur **Créer**.
+4. Repérez le dépôt, cliquez sur **Auto-Déploiement**, copiez l'URL du Webhook et collez-la dans les paramètres de votre dépôt GitHub (**Settings &rarr; Webhooks**).
+5. Dans le gestionnaire de fichiers Hostinger, naviguez vers `public_html/php/` et créez le fichier `.env` avec les accès de la base de production (Section 3).
 
-## 4. Structure Globale du Projet
-
-```
-public_html/ (ou racine de votre site internet)
-├── php/
-│   ├── .env                 # Variables de configuration de production (Exclu de Git)
-│   ├── config/
-│   │   ├── config.php       # Constantes globales et chargeur automatique de .env
-│   │   └── database.php     # Instance Singleton PDO MySQL
-│   ├── database/
-│   │   ├── schema.sql       # Structure des 15 tables relationnelles
-│   │   └── seed.sql         # Données d'initialisation (compte administrateur et fiches)
-│   ├── src/
-│   │   ├── Core/            # Composants fondamentaux (Router, Middleware, Session, MVC Core)
-│   │   ├── Controllers/     # Contrôleurs publics (Automobile, Immobilier, Blog, Services...)
-│   │   │   └── Admin/       # Contrôleurs d'administration (PageBuilder, Menus, Testimonials...)
-│   │   ├── Models/          # Entités BDD (User, Car, Property, SiteSetting, MenuItem...)
-│   │   └── Views/           # Templates et fichiers de rendu HTML
-│   └── public/              # Dossier pointé par le serveur web
-│       ├── index.php        # Front Controller d'entrée unique
-│       ├── .htaccess        # Règles de réécriture d'URL Apache
-│       ├── assets/          # Styles CSS, images de base et scripts JS
-│       └── uploads/         # Répertoire de stockage physique de la bibliothèque de médias
+### Étape 3 : Gestion de la Redirection (Optionnelle si Document Root non modifiable)
+Si vous ne pouvez pas modifier le Document Root de votre domaine sur le hPanel, créez un fichier `.htaccess` à la racine de `/public_html` pour rediriger silencieusement le trafic vers `/php/public/` :
+```apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/php/public/
+    RewriteRule ^(.*)$ php/public/$1 [L]
+</IfModule>
 ```
 
 ---
 
-## 5. Configuration GitHub & Déploiement Continu
+## 5. Commandes Git pour la Mise en Ligne
 
-Pour automatiser la mise en ligne, configurez le déploiement continu via Webhook Hostinger.
+Commandes à exécuter localement pour déployer sur la branche de production `main` :
 
-### Séquence de déploiement automatique :
-```
-Développement Local (Git local) ──> Push sur GitHub (main) ──> Hostinger (Webhook Auto-pull)
-```
-
-1.  **Sur Hostinger (hPanel)** :
-    *   Allez dans **Avancé &rarr; Git**.
-    *   Entrez l'URL du dépôt : `https://github.com/KODEX-cloud/Xnova.git`.
-    *   Branche : `main`.
-    *   Dossier de destination : `public_html`.
-    *   Cliquez sur **Créer**.
-2.  **Activer l'Auto-Déploiement** :
-    *   Une fois créé, repérez le dépôt dans Hostinger et cliquez sur **Auto-Déploiement**.
-    *   Copiez l'**URL du Webhook** générée par Hostinger.
-3.  **Sur GitHub** :
-    *   Ouvrez votre dépôt &rarr; **Settings &rarr; Webhooks** &rarr; **Add webhook**.
-    *   Collez l'URL dans **Payload URL**.
-    *   Sélectionnez le format `application/json` et l'événement `push`.
-    *   Enregistrez.
-
-Désormais, tout push sur GitHub déclenche instantanément la mise en production sur Hostinger.
-
----
-
-## 6. Procédure de Sauvegarde (Backups)
-
-### A. Sauvegarde manuelle des fichiers
-1.  Connectez-vous à Hostinger hPanel &rarr; **Fichiers &rarr; Sauvegardes**.
-2.  Sélectionnez **Sauvegardes de fichiers** &rarr; Choisir le répertoire `public_html` &rarr; Cliquez sur **Télécharger** ou **Préparer la sauvegarde**.
-
-### B. Sauvegarde SQL automatique via tâche Cron
-Ajoutez une **Tâche Cron** sous Hostinger hPanel &rarr; **Avancé &rarr; Tâches Cron** pour exporter les données toutes les nuits à minuit :
 ```bash
-mysqldump -h localhost -u u123456789_root -pVotreMotDePasse u123456789_nova_db > /home/u123456789/backups/db_backup_$(date +\%F).sql
+# Se placer sur la branche principale
+git checkout main
+
+# S'assurer d'être à jour
+git pull origin main
+
+# Ajouter et committer
+git add .
+git commit -m "chore: préparer la mise en ligne finale de production"
+
+# Pousser sur GitHub (déclenche le déploiement sur nova-ci.com via Webhook)
+git push origin main
 ```
-Planification : `0 0 * * *` (tous les jours à minuit).
 
 ---
 
-## 7. Procédure de Restauration (Recovery)
+## 6. Plan d'Audit & Recette Post-Déploiement
 
-En cas d'incident, suivez ces étapes pour restaurer une version stable.
+Dès que le site est déployé en production sur `nova-ci.com`, effectuez les tests et validations suivants :
 
-### A. Restauration des fichiers
-1.  Allez dans **hPanel &rarr; Fichiers &rarr; Sauvegardes &rarr; Sauvegardes de fichiers**.
-2.  Sélectionnez la date de la sauvegarde souhaitée dans le menu déroulant.
-3.  Cochez le dossier `public_html` et cliquez sur **Restaurer les fichiers** (écrase les fichiers actuels).
+### A. Validation des Pages & Routes publiques
+Ouvrez les liens ci-dessous et vérifiez que le site se charge en HTTPS sans erreur :
+*   `https://nova-ci.com/` (Page d'accueil)
+*   `https://nova-ci.com/automobile` (Listing automobile)
+*   `https://nova-ci.com/immobilier` (Listing immobilier)
+*   `https://nova-ci.com/services` (Page des services)
+*   `https://nova-ci.com/blog` (Articles de blog)
+*   `https://nova-ci.com/contact` (Formulaire de contact)
+*   `https://nova-ci.com/annonces` (Tous les listings)
 
-### B. Restauration de la base de données (SQL)
-1.  Connectez-vous à **phpMyAdmin** sur Hostinger.
-2.  Sélectionnez votre base de données et cochez toutes les tables, puis choisissez l'option **Supprimer** (Drop) pour vider la base.
-3.  Cliquez sur l'onglet **Importer**.
-4.  Choisissez le dernier fichier SQL sauvegardé (ex: `db_backup_2026-06-05.sql`) et cliquez sur **Importer**.
+### B. Validation Administrative (CMS Back-office)
+Connectez-vous à l'adresse `https://nova-ci.com/auth/login` (Identifiants : `admin@nova.ci` / `admin123`) :
+1.  **Création d'Annonce & Médias** : Créez une annonce témoin et téléversez des photos. Assurez-vous qu'elles apparaissent bien en frontend et que la Bibliothèque de Médias s'affiche en grille.
+2.  **Page Builder** : Modifiez les blocs de la page d'accueil (réorganisez ou désactivez une section) et vérifiez le rendu frontend.
+3.  **Design Manager** : Changez une couleur de marque en back-office et vérifiez sa mise à jour en direct.
+4.  **SEO Manager** : Mettez à jour le titre SEO ou la description d'une page et examinez la source de la page (Ctrl+U) en frontend.
 
 ---
 
-## 8. Procédure de Mise à Jour (Updates)
+## 7. Procédure de Restauration Rapide (Rollback)
 
-### A. Mises à jour mineures de code
-1.  Effectuez vos modifications et testez-les en local.
-2.  Exécutez `git commit -am "Description des changements"` puis `git push origin main`.
-3.  Le webhook déclenche automatiquement le `git pull` de Hostinger et le site est mis à jour en ligne en moins de 3 secondes.
+En cas de problème bloquant en production (erreur 500, plantage de la base de données, etc.), vous pouvez exécuter le rollback en moins de 10 secondes :
 
-### B. Modifications de base de données (Migrations)
-1.  Si votre modification nécessite une mise à jour de la structure MySQL (nouvelle table ou colonne) :
-    *   Exécutez la requête `ALTER TABLE` ou `CREATE TABLE` sur votre BDD locale.
-    *   Ajoutez cette requête SQL dans un script ou dans `php/database/schema.sql` pour conserver l'historique dans Git.
-    *   Connectez-vous à phpMyAdmin en ligne sur Hostinger et exécutez la même requête SQL dans l'onglet **SQL** pour synchroniser la base de production.
+### A. Code PHP
+Double-cliquez sur le script local [rollback.bat](file:///c:/Users/PC/AppData/Local/Packages/Claude_pzs8sxrjxfjjc/LocalCache/Roaming/Claude/Nova/rollback.bat) ou exécutez dans votre terminal :
+```bash
+git checkout main
+git reset --hard nova-nextjs-final-backup
+git push origin main --force
+```
+Cela forcera GitHub et Hostinger à recharger l'ancienne version stable Next.js.
+
+### B. Base de Données MySQL
+Si la base de données a été altérée :
+1. Ouvrez phpMyAdmin sur Hostinger.
+2. Sélectionnez toutes les tables et choisissez l'option **Supprimer** (Drop) pour vider la base.
+3. Cliquez sur **Importer** et sélectionnez votre fichier de sauvegarde local `backup_local_nova_db.sql`.
