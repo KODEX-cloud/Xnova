@@ -22,12 +22,16 @@ export async function GET(req: NextRequest) {
   if (type) where.type = type;
   if (isRead !== null && isRead !== "") where.isRead = isRead === "true";
 
+  const pipelineStatus = searchParams.get("pipelineStatus");
+  if (pipelineStatus) where.pipelineStatus = pipelineStatus;
+
   const [leads, total] = await Promise.all([
     prisma.lead.findMany({
       where,
       orderBy: { createdAt: "desc" },
       skip,
       take: limit,
+      include: { assignedTo: { select: { id: true, name: true, email: true, avatar: true } } },
     }),
     prisma.lead.count({ where }),
   ]);

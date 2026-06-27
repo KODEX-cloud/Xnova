@@ -50,6 +50,7 @@ model User {
   messagesSent          Message[]      @relation("MessageSender")
   messagesReceived      Message[]      @relation("MessageReceiver")
   invoices              Invoice[]
+  assignedLeads         Lead[]         @relation("LeadAssignee")
 }
 
 // ── Payments ──────────────────────────────────────────────────────────────────
@@ -278,18 +279,26 @@ model FaqItem {
   updatedAt DateTime @updatedAt
 }
 model Lead {
-  id          String   @id @default(cuid())
-  type        String
-  name        String?
-  email       String?
-  phone       String?
-  subject     String?
-  message     String?
-  source      String?
-  listingType String?
-  listingId   String?
-  isRead      Boolean  @default(false)
-  createdAt   DateTime @default(now())
+  id             String    @id @default(cuid())
+  type           String
+  name           String?
+  email          String?
+  phone          String?
+  subject        String?
+  message        String?
+  source         String?
+  listingType    String?
+  listingId      String?
+  isRead         Boolean   @default(false)
+  // CRM fields
+  pipelineStatus String    @default("NOUVEAU")   // NOUVEAU | CONTACTÉ | EN_COURS | QUALIFIÉ | CONVERTI | PERDU
+  priority       String    @default("MEDIUM")    // LOW | MEDIUM | HIGH | URGENT
+  notes          String?
+  expectedValue  Float?
+  assignedToId   String?
+  assignedTo     User?     @relation("LeadAssignee", fields: [assignedToId], references: [id])
+  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime  @default(now())
 }
 model ContactMessage {
   id        String   @id @default(cuid())
