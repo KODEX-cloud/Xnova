@@ -128,6 +128,35 @@ export async function POST(req: Request) {
       }
     }
 
+    // Auto-generate invoice for completed payments
+    if (type === "SUBSCRIPTION") {
+      const year = new Date().getFullYear();
+      const invoiceCount = await prisma.invoice.count({ where: { number: { startsWith: `NOVA-${year}` } } });
+      await prisma.invoice.create({
+        data: {
+          number:      `NOVA-${year}-${String(invoiceCount + 1).padStart(4, "0")}`,
+          userId,
+          paymentId:   payment.id,
+          amount:      parseFloat(String(amount)),
+          tax:         0,
+          total:       parseFloat(String(amount)),
+          currency:    "FCFA",
+          status:      "PAID",
+          description: `Abonnement ${planType || "FREE"} — 1 mois`,
+        },
+      });
+
+      await prisma.notification.create({
+        data: {
+          userId,
+          type:  "PAYMENT",
+          title: "Paiement confirmé",
+          body:  `Votre abonnement ${planType || "FREE"} est activé. Bonne continuation !`,
+          link:  "/dashboard/abonnement",
+        },
+      });
+    }
+
     return NextResponse.json({ ok: true, payment, reference });
   } catch (e) {
     console.error("[PAYMENTS POST]", e);
