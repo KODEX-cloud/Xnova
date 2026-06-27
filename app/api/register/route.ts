@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
+import { sendWelcomeEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -47,6 +48,9 @@ export async function POST(req: Request) {
         expiresAt: null,
       },
     });
+
+    // Send welcome email (non-blocking)
+    sendWelcomeEmail(user.email, user.name || "").catch(() => {});
 
     return NextResponse.json({ ok: true, user }, { status: 201 });
   } catch (e: any) {

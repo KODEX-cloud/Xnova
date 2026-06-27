@@ -27,6 +27,32 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
   return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 }
 
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const session = await getServerSession(authOptions);
+  if (!session?.user) return NextResponse.json({ error: "Non authentifié" }, { status: 401 });
+
+  const { id } = await params;
+  const userId = (session.user as any).id as string;
+  const isAdmin = ["SUPER_ADMIN", "ADMIN"].includes((session.user as any).role);
+  const body = await req.json();
+
+  const car = await prisma.car.findUnique({ where: { id }, select: { userId: true } }).catch(() => null);
+  if (car) {
+    if (!isAdmin && car.userId !== userId) return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+    const updated = await prisma.car.update({ where: { id }, data: body });
+    return NextResponse.json(updated);
+  }
+
+  const prop = await prisma.property.findUnique({ where: { id }, select: { userId: true } }).catch(() => null);
+  if (prop) {
+    if (!isAdmin && prop.userId !== userId) return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+    const updated = await prisma.property.update({ where: { id }, data: body });
+    return NextResponse.json(updated);
+  }
+
+  return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+}
+
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const session = await getServerSession(authOptions);
   if (!session) {
@@ -36,7 +62,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   const { id } = await params;
   const type = new URL(req.url).searchParams.get("type");
   const userId = (session.user as any).id;
-  const isAdmin = (session.user as any).role === "ADMIN";
+  const isAdmin = ["SUPER_ADMIN", "ADMIN"].includes((session.user as any).role);
 
   try {
     if (type === "AUTOMOBILE") {

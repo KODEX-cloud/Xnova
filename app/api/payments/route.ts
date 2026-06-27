@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { generatePaymentRef } from "@/lib/plans";
+import { sendPaymentConfirmationEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -128,33 +129,49 @@ export async function POST(req: Request) {
       }
     }
 
-    // Auto-generate invoice for completed payments
+    // Auto-generate invoice (graceful — table may not exist yet in prod)
     if (type === "SUBSCRIPTION") {
-      const year = new Date().getFullYear();
-      const invoiceCount = await prisma.invoice.count({ where: { number: { startsWith: `NOVA-${year}` } } });
-      await prisma.invoice.create({
-        data: {
-          number:      `NOVA-${year}-${String(invoiceCount + 1).padStart(4, "0")}`,
-          userId,
-          paymentId:   payment.id,
-          amount:      parseFloat(String(amount)),
-          tax:         0,
-          total:       parseFloat(String(amount)),
-          currency:    "FCFA",
-          status:      "PAID",
-          description: `Abonnement ${planType || "FREE"} — 1 mois`,
-        },
-      });
+      try {
+        const year = new Date().getFullYear();
+        const invoiceCount = await (prisma as any).invoice.count({ where: { number: { startsWith: `NOVA-${year}` } } });
+        await (prisma as any).invoice.create({
+          data: {
+            number:      `NOVA-${year}-${String(invoiceCount + 1).padStart(4, "0")}`,
+            userId,
+            paymentId:   payment.id,
+            amount:      parseFloat(String(amount)),
+            tax:         0,
+            total:       parseFloat(String(amount)),
+            currency:    "FCFA",
+            status:      "PAID",
+            description: `Abonnement ${planType || "FREE"} - 1 mois`,
+          },
+        });
+      } catch (e) {
+        console.warn("[PAYMENTS] Invoice table not ready:", (e as Error).message);
+      }
 
-      await prisma.notification.create({
-        data: {
-          userId,
-          type:  "PAYMENT",
-          title: "Paiement confirmé",
-          body:  `Votre abonnement ${planType || "FREE"} est activé. Bonne continuation !`,
-          link:  "/dashboard/abonnement",
-        },
-      });
+      try {
+        await (prisma as any).notification.create({
+          data: {
+            userId,
+            type:  "PAYMENT",
+            title: "Paiement confirme",
+            body:  `Votre abonnement ${planType || "FREE"} est active. Bonne continuation !`,
+            link:  "/dashboard/abonnement",
+          },
+        });
+      } catch (e) {
+        console.warn("[PAYMENTS] Notification table not ready:", (e as Error).message);
+      }
+    }
+
+    // Send payment confirmation email (non-blocking)
+    if (type === "SUBSCRIPTION") {
+      const user = await prisma.user.findUnique({ where: { id: userId }, select: { email: true, name: true } });
+      if (user?.email) {
+        sendPaymentConfirmationEmail(user.email, user.name || "", planType || "FREE", parseFloat(String(amount)), reference).catch(() => {});
+      }
     }
 
     return NextResponse.json({ ok: true, payment, reference });

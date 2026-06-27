@@ -50,8 +50,8 @@ export const authOptions: AuthOptions = {
     },
   },
   pages: {
-    signIn: "/admin/login",
-    error: "/admin/login",
+    signIn: "/auth/login",
+    error: "/auth/login",
   },
   session: {
     strategy: "jwt",

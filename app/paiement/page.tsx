@@ -106,8 +106,21 @@ export default function PaiementPage() {
     } catch {}
   }
 
-  function handleFreeSubmit() {
-    updatePlanInStorage("GRATUIT");
+  async function handleFreeSubmit() {
+    setStep("processing");
+    try {
+      await fetch("/api/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: 0,
+          method: "NONE",
+          type: "ANNONCE",
+          planType: "GRATUIT",
+          relatedId: pendingId,
+        }),
+      });
+    } catch {}
     router.push("/dashboard/annonces");
   }
 
@@ -127,8 +140,31 @@ export default function PaiementPage() {
 
   async function handleConfirm() {
     setStep("processing");
-    await new Promise((r) => setTimeout(r, 3000));
-    updatePlanInStorage(plan);
+    setError("");
+    try {
+      const res = await fetch("/api/payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: selectedPlan.price,
+          method,
+          type: "ANNONCE",
+          planType: plan,
+          relatedId: pendingId,
+          phone: method !== "CARD" ? phone : undefined,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        setError(err.error || "Erreur de paiement. Veuillez reessayer.");
+        setStep("confirm");
+        return;
+      }
+    } catch {
+      setError("Erreur reseau. Veuillez reessayer.");
+      setStep("confirm");
+      return;
+    }
     setStep("done");
     setTimeout(() => router.push("/paiement/success"), 800);
   }
