@@ -1,0 +1,379 @@
+// Nova Marketplace — Prisma Schema v4 (SaaS Enterprise Edition)
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ── Users ─────────────────────────────────────────────────────────────────────
+model User {
+  id                    String         @id @default(cuid())
+  email                 String         @unique
+  password              String
+  name                  String?
+  phone                 String?
+  // SUPER_ADMIN | ADMIN | EDITOR | AGENT_AUTO | AGENT_IMMO | USER | AGENCY | DEALER | PROVIDER
+  role                  String         @default("USER")
+  // PARTICULIER | AGENCE | CONCESSIONNAIRE | PRESTATAIRE
+  userType              String         @default("PARTICULIER")
+  avatar                String?
+  coverImage            String?
+  bio                   String?
+  company               String?
+  website               String?
+  city                  String?
+  address               String?
+  isActive              Boolean        @default(true)
+  isVerified            Boolean        @default(false)
+  emailVerifiedAt       DateTime?
+  lastLoginAt           DateTime?
+  // FREE | STARTER | BUSINESS | PREMIUM | ENTERPRISE
+  subscriptionPlan      String         @default("FREE")
+  subscriptionExpiresAt DateTime?
+  // Social
+  facebook              String?
+  instagram             String?
+  twitter               String?
+  linkedin              String?
+  whatsapp              String?
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  payments              Payment[]
+  subscriptions         Subscription[]
+  cars                  Car[]
+  properties            Property[]
+  favorites             Favorite[]
+  notifications         Notification[]
+  messagesSent          Message[]      @relation("MessageSender")
+  messagesReceived      Message[]      @relation("MessageReceiver")
+  invoices              Invoice[]
+}
+
+// ── Payments ──────────────────────────────────────────────────────────────────
+model Payment {
+  id            String         @id @default(cuid())
+  userId        String
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount        Float
+  currency      String         @default("FCFA")
+  method        String         // MTN | ORANGE | MOOV | CARD
+  status        String         @default("PENDING") // PENDING | SUCCESS | FAILED | REFUNDED
+  reference     String         @unique
+  type          String         // ANNONCE | BOOST | SUBSCRIPTION
+  planType      String?        // GRATUIT | EN_AVANT | PREMIUM | PRO
+  relatedId     String?        // Car or Property id
+  phone         String?
+  notes         String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  subscriptions Subscription[]
+}
+
+// ── Subscriptions ─────────────────────────────────────────────────────────────
+model Subscription {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan      String    // FREE | PRO | PREMIUM
+  status    String    @default("ACTIVE")   // ACTIVE | EXPIRED | CANCELLED
+  startsAt  DateTime  @default(now())
+  expiresAt DateTime?
+  paymentId String?
+  payment   Payment?  @relation(fields: [paymentId], references: [id])
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+// ── Cars ──────────────────────────────────────────────────────────────────────
+model Car {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  description     String?
+  price           Int
+  priceType       String    @default("SALE")
+  year            Int?
+  mileage         Int?
+  fuel            String?
+  transmission    String?
+  color           String?
+  brand           String?
+  model           String?
+  city            String?
+  location        String?
+  images          String    @default("[]")
+  category        String?
+  condition       String?
+  badge           String?
+  badgeColor      String?
+  status          String    @default("ACTIVE")   // PENDING | ACTIVE | EXPIRED | REJECTED
+  featured        Boolean   @default(false)
+  views           Int       @default(0)
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id])
+  planType        String    @default("GRATUIT")  // GRATUIT | EN_AVANT | PREMIUM
+  isBoosted       Boolean   @default(false)
+  boostedUntil    DateTime?
+  publishedAt     DateTime?
+  seoTitle        String?
+  metaDescription String?
+  ogImage         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ── Properties ────────────────────────────────────────────────────────────────
+model Property {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  description     String?
+  price           Int
+  priceType       String    @default("SALE")
+  type            String
+  bedrooms        Int?
+  bathrooms       Int?
+  surface         Int?
+  land            Int?
+  city            String?
+  location        String?
+  district        String?
+  images          String    @default("[]")
+  amenities       String    @default("[]")
+  badge           String?
+  badgeColor      String?
+  status          String    @default("ACTIVE")   // PENDING | ACTIVE | EXPIRED | REJECTED
+  featured        Boolean   @default(false)
+  views           Int       @default(0)
+  userId          String?
+  user            User?     @relation(fields: [userId], references: [id])
+  planType        String    @default("GRATUIT")
+  isBoosted       Boolean   @default(false)
+  boostedUntil    DateTime?
+  publishedAt     DateTime?
+  seoTitle        String?
+  metaDescription String?
+  ogImage         String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ── Blog ──────────────────────────────────────────────────────────────────────
+model BlogPost {
+  id              String    @id @default(cuid())
+  title           String
+  slug            String    @unique
+  content         String?
+  excerpt         String?
+  coverImage      String?
+  category        String?
+  tags            String    @default("[]")
+  author          String?
+  status          String    @default("DRAFT")
+  publishedAt     DateTime?
+  scheduledAt     DateTime?
+  views           Int       @default(0)
+  readTime        Int       @default(5)
+  seoTitle        String?
+  metaDescription String?
+  ogImage         String?
+  canonical       String?
+  noIndex         Boolean   @default(false)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+// ── CMS ───────────────────────────────────────────────────────────────────────
+model Page {
+  id              String   @id @default(cuid())
+  slug            String   @unique
+  title           String
+  sections        String   @default("[]")
+  heroTitle       String?
+  heroSubtitle    String?
+  heroImage       String?
+  content         String?
+  isPublished     Boolean  @default(true)
+  seoTitle        String?
+  metaDescription String?
+  ogImage         String?
+  canonical       String?
+  noIndex         Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+model MenuItem {
+  id        String   @id @default(cuid())
+  label     String
+  href      String?
+  icon      String?
+  parentId  String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  target    String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Media {
+  id        String   @id @default(cuid())
+  url       String
+  publicId  String?
+  filename  String
+  mimetype  String?
+  size      Int?
+  alt       String?
+  folder    String?
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+}
+model SiteSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String?
+  updatedAt DateTime @updatedAt
+}
+model Promotion {
+  id          String    @id @default(cuid())
+  title       String
+  subtitle    String?
+  description String?
+  image       String?
+  link        String?
+  badge       String?
+  discount    String?
+  countdown   String?
+  cta         String?
+  gradient    String?
+  bgColor     String?
+  isActive    Boolean   @default(true)
+  expiresAt   DateTime?
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+model Testimonial {
+  id        String   @id @default(cuid())
+  name      String
+  role      String?
+  company   String?
+  avatar    String?
+  content   String
+  rating    Int      @default(5)
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+}
+model FaqItem {
+  id        String   @id @default(cuid())
+  question  String
+  answer    String
+  category  String?
+  order     Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+model Lead {
+  id          String   @id @default(cuid())
+  type        String
+  name        String?
+  email       String?
+  phone       String?
+  subject     String?
+  message     String?
+  source      String?
+  listingType String?
+  listingId   String?
+  isRead      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+}
+model ContactMessage {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ── Favorites ─────────────────────────────────────────────────────────────────
+model Favorite {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // CAR | PROPERTY
+  itemId    String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, type, itemId])
+}
+
+// ── Notifications ─────────────────────────────────────────────────────────────
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // MESSAGE | PAYMENT | SUBSCRIPTION | SYSTEM | LISTING
+  title     String
+  body      String?
+  link      String?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+// ── Messages (internal) ───────────────────────────────────────────────────────
+model Message {
+  id          String    @id @default(cuid())
+  senderId    String
+  sender      User      @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId  String
+  receiver    User      @relation("MessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  subject     String?
+  body        String
+  attachment  String?
+  isRead      Boolean   @default(false)
+  threadId    String?
+  createdAt   DateTime  @default(now())
+}
+
+// ── Invoices ──────────────────────────────────────────────────────────────────
+model Invoice {
+  id            String    @id @default(cuid())
+  number        String    @unique
+  userId        String
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paymentId     String?
+  amount        Float
+  tax           Float     @default(0)
+  total         Float
+  currency      String    @default("FCFA")
+  status        String    @default("PAID") // PAID | PENDING | CANCELLED
+  description   String?
+  pdfUrl        String?
+  issuedAt      DateTime  @default(now())
+  dueAt         DateTime?
+  createdAt     DateTime  @default(now())
+}
+
+// ── Promo Codes ───────────────────────────────────────────────────────────────
+model PromoCode {
+  id            String    @id @default(cuid())
+  code          String    @unique
+  description   String?
+  discountType  String    @default("PERCENT") // PERCENT | FIXED
+  discountValue Float
+  maxUses       Int?
+  usedCount     Int       @default(0)
+  minAmount     Float?
+  validFrom     DateTime  @default(now())
+  validUntil    DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
