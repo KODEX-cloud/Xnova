@@ -43,13 +43,15 @@ export default function MediasPage() {
   const [deleting, setDeleting] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [typeFilter, setTypeFilter] = useState<"" | "image" | "video" | "document">("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const replaceInputRef = useRef<HTMLInputElement>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/media?limit=100");
+      const q = new URLSearchParams({ limit: "100", ...(typeFilter ? { type: typeFilter } : {}), ...(search ? { search } : {}) });
+      const res = await fetch(`/api/media?${q}`);
       if (res.ok) {
         const data = await res.json();
         const list = data.media || [];
