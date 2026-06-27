@@ -61,17 +61,6 @@ export default function AnnonceDetailPage() {
   const [plan, setPlan] = useState<string>("GRATUIT");
 
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("nova_listings");
-      if (raw) {
-        const list = JSON.parse(raw) as { id: string; plan: string }[];
-        const found = list.find((l) => l.id === id);
-        if (found) setPlan(found.plan || "GRATUIT");
-      }
-    } catch {}
-  }, [id]);
-
-  useEffect(() => {
     async function load() {
       setLoading(true);
       try {
@@ -79,6 +68,7 @@ export default function AnnonceDetailPage() {
         if (!res.ok) throw new Error("Annonce introuvable");
         const json = await res.json();
         setData(json);
+        setPlan(json.planType || "GRATUIT");
       } catch (e: any) {
         setError(e.message);
       } finally {

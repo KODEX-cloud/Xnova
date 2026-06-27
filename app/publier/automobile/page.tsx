@@ -106,11 +106,7 @@ export default function PublierAutoPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur serveur");
-      saveToStorage({ id: data.id, type: "AUTOMOBILE", title: form.title, price: form.price, createdAt: new Date().toISOString(), plan: "" });
-      localStorage.setItem("nova_pending_id", data.id);
-      localStorage.setItem("nova_pending_type", "AUTOMOBILE");
-      localStorage.setItem("nova_pending_title", form.title);
-      router.push("/paiement");
+      router.push(`/paiement?id=${data.id}&type=AUTOMOBILE&title=${encodeURIComponent(form.title)}`);
     } catch (e: any) {
       setSubmitError(e.message);
     } finally {

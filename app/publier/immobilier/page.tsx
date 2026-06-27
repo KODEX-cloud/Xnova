@@ -107,11 +107,7 @@ export default function PublierImmobilierPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Erreur serveur");
-      saveToStorage({ id: data.id, type: "IMMOBILIER", title: form.title, price: form.price, createdAt: new Date().toISOString(), plan: "" });
-      localStorage.setItem("nova_pending_id", data.id);
-      localStorage.setItem("nova_pending_type", "IMMOBILIER");
-      localStorage.setItem("nova_pending_title", form.title);
-      router.push("/paiement");
+      router.push(`/paiement?id=${data.id}&type=IMMOBILIER&title=${encodeURIComponent(form.title)}`);
     } catch (e: any) {
       setSubmitError(e.message);
     } finally {

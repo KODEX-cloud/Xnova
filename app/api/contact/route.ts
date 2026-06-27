@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+﻿import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { sendNewLeadNotification } from "@/lib/email";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -25,6 +26,13 @@ export async function POST(req: NextRequest) {
     const msg = await prisma.contactMessage.create({
       data: { name, email, phone, subject, message },
     });
+
+    // Notify admin by email (non-blocking)
+    const adminEmail = process.env.ADMIN_EMAIL || process.env.EMAIL_FROM;
+    if (adminEmail) {
+      sendNewLeadNotification(adminEmail, name, email, message).catch(() => {});
+    }
+
     return NextResponse.json(msg, { status: 201 });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });

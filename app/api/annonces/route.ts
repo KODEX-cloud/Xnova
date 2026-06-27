@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 export const dynamic = "force-dynamic";
@@ -116,6 +118,12 @@ function slugify(text: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user) {
+      return NextResponse.json({ error: "Vous devez être connecté pour publier une annonce" }, { status: 401 });
+    }
+    const userId = (session.user as any).id as string;
+
     const body = await req.json();
     const { type, ...data } = body;
 
@@ -135,6 +143,7 @@ export async function POST(req: NextRequest) {
     if (type === "AUTOMOBILE") {
       const car = await prisma.car.create({
         data: {
+          userId,
           title:        data.title.trim(),
           slug:         slugify(data.title),
           description:  data.description?.trim() || null,
@@ -161,6 +170,7 @@ export async function POST(req: NextRequest) {
     if (type === "IMMOBILIER") {
       const property = await prisma.property.create({
         data: {
+          userId,
           title:       data.title.trim(),
           slug:        slugify(data.title),
           description: data.description?.trim() || null,

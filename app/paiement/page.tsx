@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   CheckCircle2, Zap, Shield, Phone, CreditCard, ChevronRight,
@@ -66,8 +66,9 @@ const METHODS = [
   { id: "CARD" as PayMethod, label: "Carte bancaire", icon: "💳", prefix: null },
 ];
 
-export default function PaiementPage() {
+function PaiementInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [pendingTitle, setPendingTitle] = useState("votre annonce");
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [pendingType, setPendingType] = useState<string>("AUTOMOBILE");
@@ -82,29 +83,15 @@ export default function PaiementPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    try {
-      const id = localStorage.getItem("nova_pending_id");
-      const type = localStorage.getItem("nova_pending_type");
-      const title = localStorage.getItem("nova_pending_title");
-      if (id) setPendingId(id);
-      if (type) setPendingType(type);
-      if (title) setPendingTitle(title);
-    } catch {}
-  }, []);
+    const id = searchParams.get("id");
+    const type = searchParams.get("type");
+    const title = searchParams.get("title");
+    if (id) setPendingId(id);
+    if (type) setPendingType(type);
+    if (title) setPendingTitle(decodeURIComponent(title || "votre annonce"));
+  }, [searchParams]);
 
   const selectedPlan = PLANS.find((p) => p.id === plan)!;
-
-  function updatePlanInStorage(newPlan: Plan) {
-    try {
-      const raw = localStorage.getItem("nova_listings");
-      if (!raw || !pendingId) return;
-      const list = JSON.parse(raw);
-      const updated = list.map((l: { id: string; plan?: string; paidAt?: string }) =>
-        l.id === pendingId ? { ...l, plan: newPlan, paidAt: new Date().toISOString() } : l
-      );
-      localStorage.setItem("nova_listings", JSON.stringify(updated));
-    } catch {}
-  }
 
   async function handleFreeSubmit() {
     setStep("processing");
@@ -433,5 +420,13 @@ export default function PaiementPage() {
         </AnimatePresence>
       </div>
     </div>
+  );
+}
+
+export default function PaiementPage() {
+  return (
+    <Suspense fallback={<div className="pt-28 flex items-center justify-center"><div className="w-8 h-8 border-2 border-nova-red border-t-transparent rounded-full animate-spin" /></div>}>
+      <PaiementInner />
+    </Suspense>
   );
 }
