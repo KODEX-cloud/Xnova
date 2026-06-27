@@ -1,8 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import { sendWelcomeEmail } from "@/lib/email";
+import { rateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,11 @@ const RegisterSchema = z.object({
   userType: z.enum(["VENDEUR", "AGENCE"]).default("VENDEUR"),
 });
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const rl = rateLimit(getRateLimitKey(req, "register"), 5, 15 * 60_000);
+  if (!rl.success) {
+    return NextResponse.json({ error: "Trop de tentatives. Réessayez dans 15 minutes." }, { status: 429 });
+  }
   try {
     const body = await req.json();
     const data = RegisterSchema.parse(body);

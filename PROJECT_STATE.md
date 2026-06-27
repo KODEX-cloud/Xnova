@@ -165,22 +165,22 @@ b6c0b2b feat: Phase 3 CMS complete
 
 ---
 
-## SPRINT 09 — Backend Consolidation (27 juin 2026)
+## SPRINT 09 ï¿½ Backend Consolidation (27 juin 2026)
 
 ### Objectif : 51% ? 80%+
 ### Statut : COMPLETE
 
-### Corrections P0 appliquées
+### Corrections P0 appliquï¿½es
 
-| Fix | Fichier | Avant | Après |
+| Fix | Fichier | Avant | Aprï¿½s |
 |-----|---------|-------|-------|
 | Dashboard annonces | `app/dashboard/annonces/page.tsx` | localStorage | fetch /api/user/listings |
-| Paiement flow | `app/paiement/page.tsx` | setTimeout 3s simulation | POST /api/payments réel |
+| Paiement flow | `app/paiement/page.tsx` | setTimeout 3s simulation | POST /api/payments rï¿½el |
 | Auth signIn redirect | `lib/auth.ts` | /admin/login | /auth/login |
 | Stats API crash | `app/api/user/stats/route.ts` | crash sur Favorite/Message | try/catch gracieux |
 | Payments Invoice/Notif | `app/api/payments/route.ts` | crash si tables absentes | try/catch gracieux |
 
-### Corrections P1 appliquées
+### Corrections P1 appliquï¿½es
 
 | Fix | Fichier | Description |
 |-----|---------|-------------|
@@ -193,74 +193,74 @@ b6c0b2b feat: Phase 3 CMS complete
 | Register email | `app/api/register/route.ts` | sendWelcomeEmail() |
 | Payment email | `app/api/payments/route.ts` | sendPaymentConfirmationEmail() |
 
-### Nouveaux fichiers créés
+### Nouveaux fichiers crï¿½ï¿½s
 
 | Fichier | Description |
 |---------|-------------|
 | `app/api/annonces/[id]/route.ts` (PATCH) | PATCH listing owner/admin |
-| `app/api/payments/initiate/route.ts` | Init CinetPay réel + fallback sim |
+| `app/api/payments/initiate/route.ts` | Init CinetPay rï¿½el + fallback sim |
 | `lib/email.ts` | Emails transactionnels (Resend/console) |
 | `prisma/migrations/20260627000000_sprint09_saas/migration.sql` | SQL complet |
 
-### Migration SQL — CRITIQUE
+### Migration SQL ï¿½ CRITIQUE
 Le fichier `prisma/migrations/20260627000000_sprint09_saas/migration.sql` contient le SQL complet.
 
 **Pour appliquer en production (Supabase SQL Editor) :**
 ```
 1. Ouvrir Supabase Dashboard ? SQL Editor
 2. Copier/coller le contenu de migration.sql
-3. Exécuter
-4. Vérifier que les 5 tables existent : Favorite, Notification, Message, Invoice, PromoCode
+3. Exï¿½cuter
+4. Vï¿½rifier que les 5 tables existent : Favorite, Notification, Message, Invoice, PromoCode
 ```
 
-Ou via CLI (si DATABASE_URL configurée) :
+Ou via CLI (si DATABASE_URL configurï¿½e) :
 ```bash
 npx prisma migrate deploy
 ```
 
-### Email — Configuration
+### Email ï¿½ Configuration
 
 Configurer dans `.env.local` ou `.env.production` :
 ```env
-RESEND_API_KEY=re_xxxx           # Compte Resend.com (gratuit jusqu'à 3000 emails/mois)
+RESEND_API_KEY=re_xxxx           # Compte Resend.com (gratuit jusqu'ï¿½ 3000 emails/mois)
 EMAIL_FROM=NOVA Marketplace <noreply@nova.ci>
 ```
 
-### CinetPay — Configuration
+### CinetPay ï¿½ Configuration
 
 ```env
 CINETPAY_API_KEY=votre_api_key
 CINETPAY_SITE_ID=votre_site_id
 ```
 
-Une fois configuré, `/api/payments/initiate` appelle CinetPay réel et retourne `redirectUrl`.
-La page `/paiement` devra être mise à jour pour utiliser `/api/payments/initiate` au lieu de `/api/payments` directement.
+Une fois configurï¿½, `/api/payments/initiate` appelle CinetPay rï¿½el et retourne `redirectUrl`.
+La page `/paiement` devra ï¿½tre mise ï¿½ jour pour utiliser `/api/payments/initiate` au lieu de `/api/payments` directement.
 
 ### Score d'avancement Sprint 09
 
-| Avant | Après migration | Après config (Resend+CinetPay) |
+| Avant | Aprï¿½s migration | Aprï¿½s config (Resend+CinetPay) |
 |-------|----------------|-------------------------------|
 | 51%   | ~72%            | ~82% |
 
-**Débloqué par le sprint (sans migration) :**
+**Dï¿½bloquï¿½ par le sprint (sans migration) :**
 - Dashboard annonces lit la DB ?
-- Paiements écrits en DB ?
+- Paiements ï¿½crits en DB ?
 - Auth redirect correct ?
-- APIs non migrées ne crashent plus ?
+- APIs non migrï¿½es ne crashent plus ?
 
-**Débloqué après migration SQL :**
+**Dï¿½bloquï¿½ aprï¿½s migration SQL :**
 - Messages, Notifications, Favoris, Factures, CRM pipeline ?
-- Score passe à ~72%
+- Score passe ï¿½ ~72%
 
-**Débloqué après config Resend + CinetPay :**
+**Dï¿½bloquï¿½ aprï¿½s config Resend + CinetPay :**
 - Emails transactionnels ?
-- Paiements gateway réels ?
-- Score passe à ~82%
+- Paiements gateway rï¿½els ?
+- Score passe ï¿½ ~82%
 
 
 ---
 
-## SPRINT 10 — Database Consolidation (27 juin 2026)
+## SPRINT 10 ï¿½ Database Consolidation (27 juin 2026)
 
 ### Objectif : Eliminer toutes les simulations, connecter tout au backend reel
 ### Statut : COMPLETE
@@ -289,7 +289,7 @@ La page `/paiement` devra être mise à jour pour utiliser `/api/payments/initiate
 
 ---
 
-## SPRINT 11 — Database Finalization & Production Readiness (27 juin 2026)
+## SPRINT 11 ï¿½ Database Finalization & Production Readiness (27 juin 2026)
 
 ### Objectif : Coherence totale DB/API/Backend/CMS/Frontend
 ### Statut : COMPLETE
@@ -306,7 +306,7 @@ La page `/paiement` devra être mise à jour pour utiliser `/api/payments/initiate
 
 ### Migration SQL Sprint 11
 - `prisma/migrations/20260627100000_sprint11_finalization/migration.sql`
-- Contient TOUT (Sprint 09 + 11) — safe a re-executer (IF NOT EXISTS)
+- Contient TOUT (Sprint 09 + 11) ï¿½ safe a re-executer (IF NOT EXISTS)
 - 15+ index de performance ajoutes
 
 ### Business Migration Pipeline
@@ -330,3 +330,40 @@ La page `/paiement` devra être mise à jour pour utiliser `/api/payments/initiate
 - `PIPELINE.md` : guide pipeline deploiement
 
 ### Score : 78% -> 82% (avant migration SQL) -> 90% (apres migration SQL)
+
+---
+
+## PRP â€” Production Readiness Program (27 juin 2026)
+
+### Objectif : Auditer et securiser tout avant la mise en production
+### Statut : COMPLETE
+
+### Securite implementee
+- `next.config.js` : 8 security headers (CSP, HSTS, X-Frame-Options, X-Content-Type-Options, X-XSS-Protection, Referrer-Policy, Permissions-Policy, X-DNS-Prefetch-Control)
+- `next.config.js` : poweredByHeader: false, compress: true
+- `lib/rate-limit.ts` : rate limiter in-memory (sliding window)
+- `app/api/register/route.ts` : 5 req / 15 min par IP
+- `app/api/contact/route.ts` : 5 req / 1 min par IP
+
+### localStorage restant elimine
+- `dashboard/annonces/[id]/page.tsx` : bouton Booster utilise query params
+
+### Pipeline Center
+- `app/api/admin/pipeline/route.ts` : status API temps reel (Git, DB, Build, Deploy, ENV, migrations)
+- `app/admin/(panel)/pipeline/page.tsx` : dashboard Pipeline Center avec 6 status cards, 5 boutons d'action, historique migrations, stats DB, check ENV
+- `components/admin/AdminSidebar.tsx` : lien Pipeline Center ajoute
+
+### Rapport
+- `PRODUCTION_READINESS_REPORT.md` : score global 79/100, 24 domaines audites, 9 points critiques, checklist pre-production
+
+### Score global PRP : 79/100
+- Cible apres migration SQL + Sentry + CDN : 90+/100
+- Bloquant production : 5 tables non migrees, RESEND_API_KEY, CINETPAY
+
+### Prochaines etapes pour aller a 90/100
+1. Appliquer migration SQL (Supabase Dashboard)
+2. Configurer RESEND_API_KEY (Resend.com)
+3. Configurer CINETPAY_API_KEY + CINETPAY_SITE_ID
+4. Integrer Sentry (@sentry/nextjs)
+5. CDN pour /uploads/ (Supabase Storage ou Cloudinary)
+6. Upstash Redis pour rate limiting global

@@ -10,7 +10,7 @@ import {
   Image, Users, Settings, LogOut, ChevronLeft,
   ChevronRight, MessageSquare, Zap, LayoutTemplate,
   Search, Inbox, Megaphone, Quote, Palette, Home,
-  CreditCard, Crown, LayoutGrid, Sliders, Monitor, HelpCircle,
+  CreditCard, Crown, LayoutGrid, Sliders, Monitor, HelpCircle, GitBranch,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -39,6 +39,7 @@ const NAV = [
   { href: "/admin/design", icon: Palette, label: "Design & Couleurs", group: "Admin" },
   { href: "/admin/utilisateurs", icon: Users, label: "Utilisateurs", group: "Admin" },
   { href: "/admin/parametres", icon: Settings, label: "Paramètres", group: "Admin" },
+  { href: "/admin/pipeline",   icon: GitBranch, label: "Pipeline Center", group: "Admin" },
 ];
 
 export default function AdminSidebar() {

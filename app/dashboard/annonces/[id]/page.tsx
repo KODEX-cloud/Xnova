@@ -248,12 +248,7 @@ export default function AnnonceDetailPage() {
             </div>
             {plan === "GRATUIT" && (
               <Link
-                href="/paiement"
-                onClick={() => {
-                  localStorage.setItem("nova_pending_id", id);
-                  localStorage.setItem("nova_pending_type", type);
-                  localStorage.setItem("nova_pending_title", data.title);
-                }}
+                href={`/paiement?id=${id}&type=${type}&title=${encodeURIComponent(data.title)}`}
                 className="flex items-center justify-center gap-2 w-full py-2.5 bg-nova-red hover:bg-nova-red/90 text-white font-bold text-sm rounded-xl transition-all hover:shadow-lg hover:shadow-nova-red/30"
               >
                 <Zap className="h-4 w-4" />

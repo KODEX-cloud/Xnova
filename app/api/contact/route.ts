@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { sendNewLeadNotification } from "@/lib/email";
+import { rateLimit, getRateLimitKey } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -17,6 +18,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const rl = rateLimit(getRateLimitKey(req, "contact"), 5, 60_000);
+  if (!rl.success) {
+    return NextResponse.json({ error: "Trop de messages. Réessayez dans 1 minute." }, { status: 429 });
+  }
   try {
     const body = await req.json();
     const { name, email, phone, subject, message } = body;
