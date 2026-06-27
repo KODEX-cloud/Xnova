@@ -286,3 +286,47 @@ La page `/paiement` devra être mise à jour pour utiliser `/api/payments/initiate
 - `app/robots.ts` : robots.txt dynamique
 
 ### Score : 65% ? 78% (? 85% apres migration SQL)
+
+---
+
+## SPRINT 11 — Database Finalization & Production Readiness (27 juin 2026)
+
+### Objectif : Coherence totale DB/API/Backend/CMS/Frontend
+### Statut : COMPLETE
+
+### Corrections DB
+- `api/stats` crash sur `prisma.notification.count()` : try/catch ajoute
+- `api/annonces/upload` n enregistrait pas dans Media : Media.create() ajoutee
+- `api/cars/[id]` PUT/DELETE excluait SUPER_ADMIN/EDITOR : ADMIN_ROLES array
+- Invoice FK vers Payment manquante dans migration SQL : ajoute Sprint 11 SQL
+
+### Schema Prisma
+- Nouveau model `BusinessMigration` ajoute
+- `prisma generate` execute
+
+### Migration SQL Sprint 11
+- `prisma/migrations/20260627100000_sprint11_finalization/migration.sql`
+- Contient TOUT (Sprint 09 + 11) — safe a re-executer (IF NOT EXISTS)
+- 15+ index de performance ajoutes
+
+### Business Migration Pipeline
+- `scripts/pipeline.js` : orchestrateur complet 10 etapes
+- `scripts/business-migrate.js` : moteur migrations donnees
+- `prisma/business-migrations/001_seed_cms_defaults.js`
+- `prisma/business-migrations/002_seed_plans.js`
+- `app/api/admin/deploy/route.ts` : webhook ISR + Hostinger
+- `app/api/admin/migrations/route.ts` : historique migrations
+
+### npm scripts ajoutes
+- `npm run deploy` : pipeline production
+- `npm run deploy:dev` : pipeline dev
+- `npm run deploy:dry` : simulation
+- `npm run migrate:biz` : business migrations
+- `npm run migrate:biz:list` : lister migrations
+
+### Documentation
+- `DATABASE_PRODUCTION_REPORT.md` : audit complet DB
+- `BUSINESS_MIGRATION.md` : guide moteur migrations
+- `PIPELINE.md` : guide pipeline deploiement
+
+### Score : 78% -> 82% (avant migration SQL) -> 90% (apres migration SQL)

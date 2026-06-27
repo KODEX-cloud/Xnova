@@ -8,7 +8,12 @@
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "deploy": "node scripts/pipeline.js --mode=prod",
+    "deploy:dev": "node scripts/pipeline.js --mode=dev",
+    "deploy:dry": "node scripts/pipeline.js --dry-run",
+    "migrate:biz": "node scripts/business-migrate.js",
+    "migrate:biz:list": "node scripts/business-migrate.js --list"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

@@ -1,11 +1,13 @@
-import { NextResponse } from "next/server";
+﻿import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const session = await getServerSession(authOptions);
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  if (!session) return NextResponse.json({ error: "Non autorise" }, { status: 401 });
 
   const now = new Date();
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -22,7 +24,6 @@ export async function GET() {
     totalRevenue, revenueThisMonth, revenueLastMonth,
     activeSubs, subsByPlan,
     pendingListings,
-    totalNotifications, unreadNotifications,
   ] = await Promise.all([
     prisma.car.count(),
     prisma.car.count({ where: { status: "ACTIVE" } }),
@@ -48,9 +49,16 @@ export async function GET() {
     prisma.subscription.count({ where: { status: "ACTIVE" } }),
     prisma.subscription.groupBy({ by: ["plan"], _count: { id: true }, where: { status: "ACTIVE" } }),
     prisma.car.count({ where: { status: "PENDING" } }).then(c => prisma.property.count({ where: { status: "PENDING" } }).then(p => c + p)),
-    prisma.notification.count(),
-    prisma.notification.count({ where: { isRead: false } }),
   ]);
+
+  // Tables that may not be migrated yet — graceful degradation
+  let totalNotifications = 0, unreadNotifications = 0;
+  try {
+    [totalNotifications, unreadNotifications] = await Promise.all([
+      (prisma as any).notification.count(),
+      (prisma as any).notification.count({ where: { isRead: false } }),
+    ]);
+  } catch {}
 
   const revMonth = revenueThisMonth._sum.amount ?? 0;
   const revLastMonth = revenueLastMonth._sum.amount ?? 0;

@@ -370,6 +370,20 @@ model Invoice {
   createdAt     DateTime  @default(now())
 }
 
+// ── Business Migrations ────────────────────────────────────────────────────────
+model BusinessMigration {
+  id          String    @id @default(cuid())
+  version     String    @unique
+  name        String
+  description String?
+  status      String    @default("APPLIED") // APPLIED | FAILED | ROLLED_BACK
+  appliedAt   DateTime  @default(now())
+  duration    Int?      // milliseconds
+  error       String?
+  checksum    String?
+  createdAt   DateTime  @default(now())
+}
+
 // ── Promo Codes ───────────────────────────────────────────────────────────────
 model PromoCode {
   id            String    @id @default(cuid())
