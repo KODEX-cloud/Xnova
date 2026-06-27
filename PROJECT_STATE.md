@@ -1,6 +1,5 @@
 # PROJECT_STATE.md — NOVA MARKETPLACE
-> Mis à jour après chaque tâche importante
-> Dernière mise à jour : 24 juin 2026
+> Mis à jour : 27 juin 2026 — EPIC 01→08 complètes
 
 ---
 
@@ -8,48 +7,123 @@
 
 | Dimension | Score | Évolution |
 |-----------|-------|-----------|
-| CMS Administrabilité | ~82% | ↑ depuis 58% (Phase 3 complète) |
-| Architecture technique | 90/100 | stable |
-| SEO technique | 78/100 | ↑ (generateMetadata sur 12 pages) |
-| Production-readiness | 52/100 | ↑ (pages 404 corrigées, CMS complet) |
+| CMS Administrabilité | ~90% | ↑ depuis 82% |
+| Architecture SaaS | 85/100 | ↑ (8 EPIC Enterprise) |
+| SEO technique | 78/100 | stable |
+| Production-readiness | 70/100 | ↑ (dashboard, CRM, payments, analytics) |
 
 ---
 
-## PHASE 3 — TÂCHES RÉALISÉES (24 juin 2026)
+## EPIC 01 — SaaS Dashboard (27 juin 2026)
 
-### Fichiers créés
+### Réalisé
+- Dashboard layout : sidebar sombre 11 sections avec unread badges en temps réel
+- Pages : tableau-de-bord, annonces, favoris, statistiques, messages, paiements, abonnement, factures, notifications, profil, paramètres
+- APIs : /api/user/stats, /api/user/favorites, /api/user/notifications, /api/invoices, /api/messages (+ unread count), /api/promo
+- Profile API étendue : bio, company, city, avatar, website, réseaux sociaux
+- Prisma schema v4 : Favorite, Notification, Message, Invoice, PromoCode + champs sociaux User
+- lib/plans.ts : 5 plans SaaS (FREE/STARTER/BUSINESS/PREMIUM/ENTERPRISE)
+- lib/utils.ts : formatPrice, formatDate, slugify
 
-| Fichier | Description |
-|---------|-------------|
-| `lib/icon-map.ts` | Dictionnaire Lucide icons (string → composant React) |
-| `lib/nav-defaults.ts` | Fallbacks Navbar + parseurs JSON mega menu |
-| `lib/get-page-seo.ts` | Utilitaire `getPageSeo(slug, defaults)` → Metadata |
-| `app/api/faq/route.ts` | GET + POST FaqItem (auth ADMIN) |
-| `app/api/faq/[id]/route.ts` | GET + PUT + DELETE FaqItem |
-| `app/faq/page.tsx` | Page /faq dynamique (FaqItem DB + hero + CTA) |
-| `app/confidentialite/page.tsx` | Page /confidentialite (SiteSetting + fallback complet) |
-| `app/cgu/page.tsx` | Page /cgu (SiteSetting + fallback complet) |
-| `app/sitemap/page.tsx` | Plan du site statique (7 sections) |
-| `app/admin/(panel)/faq/page.tsx` | CRUD FAQ complet (add/edit/delete/reorder/categories) |
+---
 
-### Fichiers modifiés
+## EPIC 02 — CRM Pipeline (27 juin 2026)
 
-| Fichier | Modification |
-|---------|-------------|
-| `components/layout/Navbar.tsx` | Réécriture : lit `nav.*` SiteSetting + logo dynamique + CTA dynamique |
-| `components/layout/Footer.tsx` | Réécriture : colonnes dynamiques + logo dynamique + newsletter dynamique |
-| `app/annonces/page.tsx` | Connecté à `annonces.*` SiteSetting (hero, tri, pagination) |
-| `app/admin/(panel)/apparence/page.tsx` | +5 tabs : Branding, Header, Footer, Liens, SEO |
-| `app/admin/(panel)/menus/page.tsx` | +tab Mega Menu : éditeur JSON nav.megamenu + nav.mobilemenu |
-| `components/admin/AdminSidebar.tsx` | Ajout lien "FAQ" dans navigation |
-| `app/admin/(panel)/pages/[...slug]/page.tsx` | +champs services (features/gallery/tag) + pages légales (faq/cgu/confidentialite) |
-| `components/services/ServiceDetailPage.tsx` | gallery + features lus depuis CMS avec fallback |
-| `app/services/location-voiture/page.tsx` | generateMetadata dynamique via getPageSeo |
-| `app/services/flotte/page.tsx` | generateMetadata dynamique |
-| `app/services/location-immo/page.tsx` | generateMetadata dynamique |
-| `app/services/achat-vente-immo/page.tsx` | generateMetadata dynamique |
-| `app/services/pieces-auto/page.tsx` | generateMetadata dynamique |
-| `app/admin/(panel)/seo/page.tsx` | PAGES array : 7 → 16 pages (slug "automobiles"→"automobile" corrigé, ajout faq/cgu/confidentialite/services) |
+### Réalisé
+- Lead model : pipelineStatus (6 étapes), priority, notes, expectedValue, assignedToId
+- API leads [id] : GET + PATCH + DELETE avec CRM fields
+- Admin leads page : vue inbox + vue Kanban pipeline, pipeline quick-move, notes internes, priority selector
+
+---
+
+## EPIC 03 — Messagerie Interne (27 juin 2026)
+
+### Réalisé
+- /api/admin/messages : GET (conversations admin) + POST (composer vers user + notification)
+- Admin messages page : onglets Contact / Messages Internes, thread view, modal composer vers n'importe quel user
+
+---
+
+## EPIC 04 — Notifications (27 juin 2026)
+
+### Réalisé
+- /api/admin/notifications : broadcast (tous users ou IDs spécifiques) + stats unread par user
+- Admin /notifications : formulaire broadcast (type, titre, body, lien, audience), statut canaux (in-app/email/SMS/WhatsApp)
+
+---
+
+## EPIC 05 — Monétisation (27 juin 2026)
+
+### Réalisé
+- /api/payments/webhook : handler CinetPay (status update, activation abonnement, auto-invoice, notification)
+- /api/payments POST : auto-génère Invoice + Notification sur paiement abonnement
+- Admin /paiements/gateways : toggles CMS (CinetPay, MTN MoMo, Orange Money, Wave, Stripe), config fields, webhook URL
+
+---
+
+## EPIC 06 — Back-Office Enterprise (27 juin 2026)
+
+### Réalisé
+- /api/stats : étendu avec revenue (total/mensuel/trend), subscriptions byPlan, croissance users, pending listings
+- /api/admin/export : CSV export (users, payments, leads, listings) — admin seulement
+- Admin /systeme : santé système, stats globales, export CSV, version info
+
+---
+
+## EPIC 07 — Media Center (27 juin 2026)
+
+### Réalisé
+- Upload API : video (mp4/webm), PDF, avif, folder param, alt text, limites par type, accès tous roles admin
+- Media API : search, type filter, folder filter, bulk DELETE
+- Admin medias : filtre par type (image/video/document)
+
+---
+
+## EPIC 08 — Analytics (27 juin 2026)
+
+### Réalisé
+- Admin /analytics : KPI cards avec trends, abonnements par plan (bar chart), pipeline leads, taux activation annonces, CTA Google Analytics
+
+---
+
+## MIGRATION SQL REQUISE EN PRODUCTION
+
+Les tables suivantes ont été ajoutées au schéma Prisma mais nécessitent une migration en base :
+
+```sql
+-- Nouvelles tables (EPIC 01)
+CREATE TABLE "Favorite" (...);
+CREATE TABLE "Notification" (...);
+CREATE TABLE "Message" (...);
+CREATE TABLE "Invoice" (...);
+CREATE TABLE "PromoCode" (...);
+
+-- Champs ajoutés à User
+ALTER TABLE "User" ADD COLUMN "bio" TEXT;
+ALTER TABLE "User" ADD COLUMN "company" TEXT;
+ALTER TABLE "User" ADD COLUMN "website" TEXT;
+ALTER TABLE "User" ADD COLUMN "city" TEXT;
+ALTER TABLE "User" ADD COLUMN "coverImage" TEXT;
+ALTER TABLE "User" ADD COLUMN "address" TEXT;
+ALTER TABLE "User" ADD COLUMN "isVerified" BOOLEAN DEFAULT false;
+ALTER TABLE "User" ADD COLUMN "emailVerifiedAt" TIMESTAMP;
+ALTER TABLE "User" ADD COLUMN "lastLoginAt" TIMESTAMP;
+ALTER TABLE "User" ADD COLUMN "facebook" TEXT;
+ALTER TABLE "User" ADD COLUMN "instagram" TEXT;
+ALTER TABLE "User" ADD COLUMN "twitter" TEXT;
+ALTER TABLE "User" ADD COLUMN "linkedin" TEXT;
+ALTER TABLE "User" ADD COLUMN "whatsapp" TEXT;
+
+-- Champs ajoutés à Lead (EPIC 02)
+ALTER TABLE "Lead" ADD COLUMN "pipelineStatus" TEXT DEFAULT 'NOUVEAU';
+ALTER TABLE "Lead" ADD COLUMN "priority" TEXT DEFAULT 'MEDIUM';
+ALTER TABLE "Lead" ADD COLUMN "notes" TEXT;
+ALTER TABLE "Lead" ADD COLUMN "expectedValue" DOUBLE PRECISION;
+ALTER TABLE "Lead" ADD COLUMN "assignedToId" TEXT;
+ALTER TABLE "Lead" ADD COLUMN "updatedAt" TIMESTAMP;
+```
+
+Commande : `npx prisma migrate deploy` en production après avoir configuré DATABASE_URL.
 
 ---
 
@@ -58,81 +132,33 @@
 | Bug | Fichier | Gravité |
 |-----|---------|---------|
 | Cloudinary désactivé | `.env.local` | 🟡 Upload local seulement |
-| Analytics non injectés | `app/layout.tsx` | 🟡 Non bloquant |
-| Paiements MTN/Orange simulés | `app/api/payments/route.ts` | 🔴 Prod impossible |
-| SMTP non implémenté | — | 🟡 Non bloquant |
-| AGENT_AUTO/IMMO non cloisonnés | `middleware.ts` | 🟡 Sécurité secondaire |
-
----
-
-## ÉLÉMENTS ENCORE HARDCODÉS
-
-| Élément | Fichier | Priorité |
-|---------|---------|----------|
-| Floating card hero (split mode) | `HomepageHero.tsx:388-452` | 🟢 Post-lancement |
-| Mini-stats hero split | `HomepageHero.tsx:424` | 🟢 Post-lancement |
-| Trust badges hero | `HomepageHero.tsx:315-317` | 🟢 Post-lancement |
-| Pill "NOVA en chiffres" | `StatsSection.tsx:63` | 🟢 Post-lancement |
-| Pill "Catégories" | `QuickCategoriesSection.tsx:31` | 🟢 Post-lancement |
-| Pill "Pourquoi NOVA ?" | `WhyNovaSection.tsx:28` | 🟢 Post-lancement |
-| FeaturedListings titre | `FeaturedListings.tsx` | 🟡 CMS moyen terme |
-| BlogSection titre | `BlogSection.tsx` | 🟡 CMS moyen terme |
-| Services data | `lib/services-data.ts` | 🟡 CMS moyen terme |
-| Analytics injection | `app/layout.tsx` | 🟡 Avant lancement |
-| Sitemap XML `/sitemap.xml` | Absent | 🔴 SEO production |
-| `robots.txt` | Absent | 🟡 SEO production |
+| Analytics non injectés | `app/layout.tsx` | 🟡 ID en DB, pas de script |
+| SMTP non implémenté | API routes | 🟡 Config présente, pas nodemailer |
+| Paiements Mobile Money simulés | `api/payments/route.ts` | 🔴 Webhook CinetPay à activer en prod |
+| Migration DB non appliquée | Prisma | 🔴 Nouveaux modèles EPIC 01/02 inactifs en prod |
 
 ---
 
 ## PROCHAINES ÉTAPES RECOMMANDÉES
 
-### Sprint A — SEO production ✅ LIVRÉ
-- [x] `app/sitemap.xml/route.ts` — sitemap dynamique (Cars + Properties + BlogPosts, revalidate 1h)
-- [x] `app/robots.txt/route.ts` — robots.txt (protège /admin, /api, /dashboard)
-- [x] `app/layout.tsx` — injection GA4 + GTM + Facebook Pixel depuis SiteSetting (Server Component async)
-
-### Sprint C — Hero split 100% CMS ✅ LIVRÉ
-- [x] `HomepageHero.tsx` : floating card (badge, titre, prix, specs, localisation, lien) depuis CMS
-- [x] `HomepageHero.tsx` : mini-stats, activité live, trust badges, badge populaire depuis CMS
-- [x] Toggle `showHeroCard` pour masquer la carte sans coder
-- [x] `homepage-keys.ts` : +12 nouvelles clés hero split
-- [x] `admin/homepage/page.tsx` : 2 nouveaux blocs "Carte flottante" + "Trust badges & Mini-stats"
-
-### Sprint B — CMS niveau 2 ✅ LIVRÉ
-- [x] `FeaturedListings.tsx` : featuredLabel/featuredTitle/featuredSubtitle depuis CMS
-- [x] `BlogSection.tsx` : blogLabel/blogTitle/blogSubtitle depuis CMS
-- [x] `WhyNovaSection.tsx` : pill "Pourquoi NOVA ?" → `whyNovaLabel` CMS
-- [x] `QuickCategoriesSection.tsx` : pill "Catégories" → `categoriesLabel` CMS
-- [x] `StatsSection.tsx` : pill "NOVA en chiffres" → `statsLabel` CMS
-- [x] `HomepageCtaSection.tsx` : pill "Rejoignez NOVA" → `ctaLabel` CMS
-- [x] `lib/homepage-keys.ts` : +10 nouvelles clés CMS (labels + featured + blog)
-- [x] `admin/homepage/page.tsx` : champs Pill/Label dans Stats, Pourquoi NOVA, Catégories, CTA, + blocs Featured & Blog
-
-### Sprint C — Paiements réels (sprint séparé)
-- [ ] Intégrer CinetPay ou FedaPay pour MTN/Orange/Moov
-- [ ] Webhooks paiement → activation abonnement automatique
-
-### Sprint D — Emails (sprint séparé)
-- [ ] Intégrer Nodemailer avec settings SMTP de SiteSetting
-- [ ] Email de notification lead → `notifyEmail`
-- [ ] Email bienvenue inscription
+1. **Appliquer la migration SQL** sur Supabase (copier le SQL ci-dessus)
+2. **Configurer SMTP** (nodemailer + Resend ou SendGrid)
+3. **Configurer CinetPay** (apiKey + siteId dans Admin → Gateways)
+4. **Auth utilisateur** : créer `/auth/login` et `/auth/register` pages (existe, à tester)
+5. **Déploiement Hostinger** : suivre DEPLOYMENT.md + STAGING.md
 
 ---
 
-## TAUX CMS PAR PAGE (post-Phase 3)
+## COMMITS RÉCENTS
 
-| Page | Avant | Après | Évolution |
-|------|-------|-------|-----------|
-| Accueil | 70% | 72% | +2% (stable, hardcoded hero split reste) |
-| Navbar | 14% | 85% | +71% 🎉 |
-| Footer | 40% | 90% | +50% 🎉 |
-| /annonces | 12% | 65% | +53% 🎉 |
-| /faq | 0% | 95% | ✅ créée |
-| /confidentialite | 0% | 100% | ✅ créée |
-| /cgu | 0% | 100% | ✅ créée |
-| /sitemap | 0% | 100% | ✅ créée |
-| Services sous-pages SEO | 0% | 80% | +80% (generateMetadata) |
-| Services sous-pages features | 17% | 55% | +38% |
-| Admin SEO couverture | 7 pages | 16 pages | +128% |
-
-**Taux global estimé post-Phase 3 : ~82%**
+```
+b8a1c8f feat(epic08): analytics dashboard
+b817280 feat(epic07): media center
+246deb3 feat(epic06): enterprise back-office
+b012b67 feat(epic05): monetization
+e5d3696 feat(epic04): notification system
+3a30cd7 feat(epic03): internal messaging
+b6da83f feat(epic02): CRM pipeline
+5c5e40c feat(epic01): SaaS dashboard
+b6c0b2b feat: Phase 3 CMS complete
+```
